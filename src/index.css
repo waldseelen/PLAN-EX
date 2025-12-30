@@ -1,0 +1,372 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --color-background: 248 250 252;
+        --color-foreground: 15 23 42;
+        --color-primary: 6 182 212;
+        --color-neon-cyan: #00f5ff;
+        --color-neon-lime: #b5ff00;
+        --color-neon-yellow: #fff200;
+    }
+
+    .dark {
+        --color-background: 15 23 42;
+        --color-foreground: 248 250 252;
+    }
+
+    body {
+        @apply bg-gradient-to-br from-surface-50 via-primary-50/30 to-surface-100 dark:from-surface-950 dark:via-surface-900 dark:to-surface-950;
+        @apply text-surface-900 dark:text-surface-50;
+        @apply transition-colors duration-300;
+        @apply antialiased;
+        @apply min-h-screen;
+    }
+
+    /* Safe area for mobile */
+    .safe-area-inset-bottom {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+}
+
+@layer components {
+
+    /* ========== Buttons ========== */
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2.5 rounded-2xl font-medium transition-all duration-200;
+        @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed;
+        @apply active:scale-[0.98];
+    }
+
+    .btn-primary {
+        @apply btn bg-gradient-to-r from-primary-500 via-primary-400 to-accent-400 text-white;
+        @apply hover:from-primary-600 hover:via-primary-500 hover:to-accent-500 hover:shadow-glow;
+        @apply active:from-primary-700 active:via-primary-600 active:to-accent-600;
+    }
+
+    .btn-success {
+        @apply btn bg-gradient-to-r from-success-500 via-success-400 to-accent-400 text-white;
+        @apply hover:from-success-600 hover:via-success-500 hover:to-accent-500 hover:shadow-glow-success;
+    }
+
+    .btn-timer {
+        @apply btn bg-gradient-to-r from-timer-500 via-timer-400 to-timer-300 text-white;
+        @apply hover:from-timer-600 hover:via-timer-500 hover:to-timer-400 hover:shadow-glow-timer;
+    }
+
+    .btn-accent {
+        @apply btn bg-gradient-to-r from-accent-500 to-accent-400 text-surface-900;
+        @apply hover:from-accent-600 hover:to-accent-500 hover:shadow-glow-accent;
+    }
+
+    .btn-secondary {
+        @apply btn bg-surface-200/80 text-surface-700 hover:bg-surface-300/80;
+        @apply dark:bg-surface-700/80 dark:text-surface-200 dark:hover:bg-surface-600/80;
+        @apply backdrop-blur-sm;
+    }
+
+    .btn-ghost {
+        @apply btn bg-transparent hover:bg-primary-100/50 dark:hover:bg-primary-900/30;
+    }
+
+    .btn-danger {
+        @apply btn bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-700 hover:to-red-600;
+    }
+
+    .btn-icon {
+        @apply p-2.5 rounded-2xl transition-all duration-200;
+        @apply hover:bg-primary-100/50 dark:hover:bg-primary-900/30;
+        @apply active:scale-95;
+    }
+
+    /* ========== Cards ========== */
+    .card {
+        @apply bg-white/80 dark:bg-surface-800/60 rounded-3xl shadow-sm;
+        @apply border border-primary-200/40 dark:border-primary-800/30;
+        @apply backdrop-blur-md;
+        @apply transition-all duration-300;
+    }
+
+    .card-hover {
+        @apply card hover:shadow-lg hover:border-primary-300/60 dark:hover:border-primary-700/50;
+        @apply hover:-translate-y-0.5 hover:bg-white/90 dark:hover:bg-surface-800/70;
+    }
+
+    .card-interactive {
+        @apply card-hover cursor-pointer active:scale-[0.99];
+    }
+
+    .card-glow {
+        @apply card border-primary-400 dark:border-primary-600;
+        @apply shadow-glow bg-gradient-to-br from-white/90 to-primary-50/50 dark:from-surface-800/80 dark:to-primary-900/20;
+    }
+
+    .card-success {
+        @apply bg-gradient-to-br from-success-50/80 to-accent-50/50 dark:from-success-900/20 dark:to-accent-900/10;
+        @apply border-success-300/60 dark:border-success-700/40;
+        @apply backdrop-blur-md;
+    }
+
+    .card-timer {
+        @apply bg-gradient-to-br from-timer-50/80 to-timer-100/50 dark:from-timer-900/20 dark:to-timer-800/10;
+        @apply border-timer-300/60 dark:border-timer-700/40;
+        @apply backdrop-blur-md animate-breathe;
+    }
+
+    .card-accent {
+        @apply bg-gradient-to-br from-accent-50/80 to-primary-50/50 dark:from-accent-900/20 dark:to-primary-900/10;
+        @apply border-accent-300/60 dark:border-accent-700/40;
+        @apply backdrop-blur-md;
+    }
+
+    /* ========== Inputs ========== */
+    .input {
+        @apply w-full px-4 py-3 rounded-2xl border border-primary-200/50 dark:border-primary-700/40;
+        @apply bg-white/80 dark:bg-surface-800/60 text-surface-900 dark:text-surface-100;
+        @apply placeholder:text-surface-400 dark:placeholder:text-surface-500;
+        @apply focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent;
+        @apply backdrop-blur-sm transition-all duration-200;
+    }
+
+    .input-sm {
+        @apply input px-3 py-2 text-sm rounded-xl;
+    }
+
+    /* ========== Typography ========== */
+    .text-gradient {
+        @apply bg-gradient-to-r from-primary-500 via-accent-400 to-success-400 bg-clip-text text-transparent;
+    }
+
+    .text-gradient-warm {
+        @apply bg-gradient-to-r from-timer-500 via-timer-400 to-accent-400 bg-clip-text text-transparent;
+    }
+
+    .timer-display {
+        @apply font-mono text-4xl font-semibold tracking-tight;
+        @apply bg-gradient-to-r from-timer-500 to-timer-400 bg-clip-text text-transparent;
+    }
+
+    /* ========== Progress Ring ========== */
+    .progress-ring {
+        @apply transform -rotate-90;
+    }
+
+    .progress-ring-bg {
+        @apply stroke-surface-200 dark:stroke-surface-700;
+    }
+
+    .progress-ring-fill {
+        @apply stroke-primary-500 transition-all duration-500 ease-out;
+        stroke-linecap: round;
+    }
+
+    /* ========== Habit Checkbox ========== */
+    .habit-checkbox {
+        @apply w-8 h-8 rounded-full border-2 flex items-center justify-center;
+        @apply transition-all duration-300 cursor-pointer;
+        @apply border-primary-300 dark:border-primary-600;
+        @apply hover:border-success-400 hover:bg-success-50/50 dark:hover:bg-success-900/20;
+    }
+
+    .habit-checkbox-checked {
+        @apply bg-gradient-to-br from-success-500 to-accent-500 border-success-500 text-white;
+        @apply shadow-glow-success;
+    }
+
+    .habit-checkbox-skipped {
+        @apply bg-surface-300 dark:bg-surface-600 border-surface-300 dark:border-surface-600;
+    }
+
+    /* ========== Skeleton Loading ========== */
+    .skeleton {
+        @apply bg-gradient-to-r from-surface-200 via-surface-100 to-surface-200 dark:from-surface-700 dark:via-surface-600 dark:to-surface-700 rounded-xl;
+        @apply animate-pulse bg-[length:200%_100%];
+    }
+
+    /* ========== Badges ========== */
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-primary {
+        @apply badge bg-primary-100/80 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300;
+        @apply backdrop-blur-sm;
+    }
+
+    .badge-success {
+        @apply badge bg-success-100/80 text-success-700 dark:bg-success-900/40 dark:text-success-300;
+        @apply backdrop-blur-sm;
+    }
+
+    .badge-timer {
+        @apply badge bg-timer-100/80 text-timer-700 dark:bg-timer-900/40 dark:text-timer-300;
+        @apply backdrop-blur-sm;
+    }
+
+    .badge-accent {
+        @apply badge bg-accent-100/80 text-accent-700 dark:bg-accent-900/40 dark:text-accent-300;
+        @apply backdrop-blur-sm;
+    }
+
+    /* ========== Modal ========== */
+    .modal-backdrop {
+        @apply fixed inset-0 bg-surface-900/40 backdrop-blur-md flex items-center justify-center z-50;
+        @apply animate-fade-in;
+    }
+
+    .modal-content {
+        @apply card p-6 w-full max-w-md mx-4;
+        @apply animate-scale-in border-primary-300/50 dark:border-primary-700/40;
+    }
+
+    /* ========== FAB ========== */
+    .fab {
+        @apply fixed bottom-24 right-6 lg:bottom-8 w-14 h-14 rounded-full;
+        @apply bg-gradient-to-r from-primary-500 via-primary-400 to-accent-400 text-white;
+        @apply flex items-center justify-center shadow-xl;
+        @apply hover:from-primary-600 hover:via-primary-500 hover:to-accent-500 hover:shadow-glow;
+        @apply active:scale-95 transition-all duration-200;
+        @apply z-40;
+    }
+
+    /* ========== Stats Card ========== */
+    .stat-card {
+        @apply card p-5;
+    }
+
+    .stat-value {
+        @apply text-3xl font-bold font-mono;
+    }
+
+    .stat-label {
+        @apply text-sm text-surface-500 dark:text-surface-400 mt-1;
+    }
+
+    /* ========== Neon Effects ========== */
+    .neon-border {
+        @apply border border-primary-400/50 dark:border-primary-500/30;
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+    }
+    
+    .dark .neon-border {
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+    }
+
+    .neon-text {
+        @apply text-primary-500 dark:text-primary-400;
+        text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+    }
+
+    /* ========== Progress Bar ========== */
+    .progress-bar {
+        @apply h-2 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden;
+    }
+
+    .progress-bar-fill {
+        @apply h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400 transition-all duration-500;
+    }
+}
+
+@layer utilities {
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: theme('colors.primary.400') transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: theme('colors.primary.400');
+        border-radius: 3px;
+    }
+
+    /* Hide scrollbar but keep functionality */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Glass effect */
+    .glass {
+        @apply bg-white/70 dark:bg-surface-800/70 backdrop-blur-xl;
+        @apply border border-white/20 dark:border-surface-700/30;
+    }
+
+    .glass-primary {
+        @apply bg-primary-50/70 dark:bg-primary-900/30 backdrop-blur-xl;
+        @apply border border-primary-200/40 dark:border-primary-700/30;
+    }
+
+    /* Gradient backgrounds */
+    .gradient-primary {
+        @apply bg-gradient-to-br from-primary-500 via-primary-400 to-accent-400;
+    }
+
+    .gradient-success {
+        @apply bg-gradient-to-br from-success-500 via-success-400 to-accent-400;
+    }
+
+    .gradient-timer {
+        @apply bg-gradient-to-br from-timer-500 via-timer-400 to-timer-300;
+    }
+
+    .gradient-accent {
+        @apply bg-gradient-to-br from-accent-500 via-accent-400 to-success-400;
+    }
+
+    /* Mesh gradient background */
+    .mesh-gradient {
+        background:
+            radial-gradient(at 40% 20%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
+            radial-gradient(at 80% 0%, rgba(163, 230, 53, 0.1) 0px, transparent 50%),
+            radial-gradient(at 0% 50%, rgba(34, 197, 94, 0.1) 0px, transparent 50%),
+            radial-gradient(at 80% 50%, rgba(245, 158, 11, 0.1) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+    }
+
+    .dark .mesh-gradient {
+        background:
+            radial-gradient(at 40% 20%, rgba(6, 182, 212, 0.1) 0px, transparent 50%),
+            radial-gradient(at 80% 0%, rgba(163, 230, 53, 0.08) 0px, transparent 50%),
+            radial-gradient(at 0% 50%, rgba(34, 197, 94, 0.08) 0px, transparent 50%),
+            radial-gradient(at 80% 50%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+    }
+
+    /* Animated gradient */
+    .animated-gradient {
+        background: linear-gradient(-45deg, #06b6d4, #22c55e, #a3e635, #f59e0b);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+    }
+
+    @keyframes gradient {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+}
