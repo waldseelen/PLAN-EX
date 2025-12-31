@@ -4,3 +4,18 @@ export { Modal } from './Modal'
 export { ProgressRing } from './ProgressRing'
 export { Skeleton, SkeletonActivityCard, SkeletonCard, SkeletonHabitCard, SkeletonStatCard } from './Skeleton'
 
+// New UX Components
+export { AnimatedCheckbox, LoadingDots, StreakBadge, SuccessAnimation } from './Animations'
+export { CategoryBadge, CategoryBorder, CategoryColorPicker, CategoryDot, categoryColors, getCategoryColorStyles, type CategoryColorKey } from './CategoryColors'
+export { DatePicker, DateRangePicker } from './DateRangePicker'
+export { EmptyActivities, EmptyHabits, EmptySearchResults, EmptySessions, EmptyStats, EnhancedEmptyState } from './EnhancedEmptyState'
+export { FocusBlurWrapper, FocusModeOverlay, FocusModeProvider, FocusModeToggle, FocusTimerDisplay, useFocusMode } from './FocusMode'
+export { Heatmap } from './Heatmap'
+export { OfflineIndicator } from './OfflineIndicator'
+export { PrivacyBlur, PrivacyProvider, PrivacyToggle, usePrivacyMode } from './PrivacyMode'
+export { PWAInstallBanner } from './PWAInstallBanner'
+export { SmartFab, defaultFabActions } from './SmartFab'
+export { SwipeableItem, SwipeableList } from './SwipeableItem'
+export { CompactTimeline, Timeline } from './Timeline'
+export { ToastProvider, useToast } from './Toast'
+

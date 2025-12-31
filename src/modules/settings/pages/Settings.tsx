@@ -1,5 +1,6 @@
 import { useTheme } from '@/app/providers/ThemeProvider'
 import { db } from '@/db'
+import { PWAInstallBanner } from '@/shared/components'
 import {
     ArrowDownTrayIcon,
     ArrowUpTrayIcon,
@@ -319,6 +320,9 @@ export function Settings() {
                     </div>
                 </div>
             </div>
+
+            {/* PWA Install */}
+            <PWAInstallBanner showInSettings />
 
             {/* About */}
             <div className="card p-6">
