@@ -70,7 +70,7 @@ export function CreateTypeModal({ isOpen, onClose, onSelect }: CreateTypeModalPr
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Ne Oluşturmak İstiyorsunuz?"
+            title="Ne oluşturmak istiyorsun?"
             size="md"
         >
             <div className="space-y-3">

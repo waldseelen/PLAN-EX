@@ -73,9 +73,11 @@ export function sanitizeText(
     // Kontrol karakterlerini kaldır (newline hariç)
     if (allowNewlines) {
         // Sadece \n ve \r\n bırak, diğer kontrol karakterlerini kaldır
+        // eslint-disable-next-line no-control-regex
         result = result.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, '')
     } else {
         // Tüm kontrol karakterlerini kaldır
+        // eslint-disable-next-line no-control-regex
         result = result.replace(/[\x00-\x1F\x7F]/g, ' ')
     }
 
@@ -219,7 +221,7 @@ export function parseUserNumber(
     } = options
 
     // Sadece sayı ve nokta/virgül bırak
-    let cleaned = input.replace(/[^\d.,\-]/g, '')
+    let cleaned = input.replace(/[^\d.,-]/g, '')
 
     // Türkçe virgülü noktaya çevir
     cleaned = cleaned.replace(',', '.')
@@ -328,6 +330,7 @@ export function sanitizeFormData<T extends Record<string, SanitizeValue>>(
 export function sanitizeFileName(name: string): string {
     // Tehlikeli karakterleri kaldır
     return name
+        // eslint-disable-next-line no-control-regex
         .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
         .replace(/\.\./g, '.')
         .trim()

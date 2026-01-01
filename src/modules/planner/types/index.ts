@@ -26,24 +26,22 @@ export const UnitSchema = z.object({
 });
 export type Unit = z.infer<typeof UnitSchema>;
 
-export const ExamSchema = z.object({
-    id: z.string(),
-    title: z.string().max(200),
-    examDateISO: z.string(),
-    description: z.string().optional(),
-});
-export type Exam = z.infer<typeof ExamSchema>;
+// Planner Event (exam or event)
+export const PlannerEventTypeSchema = z.enum(['exam', 'event']);
+export type PlannerEventType = z.infer<typeof PlannerEventTypeSchema>;
 
-// Calendar Event (generic events for calendar)
-export const CalendarEventSchema = z.object({
+export const PlannerEventSchema = z.object({
     id: z.string(),
+    type: PlannerEventTypeSchema,
+    courseId: z.string().optional(),
     title: z.string().max(200),
     dateISO: z.string(),
     description: z.string().optional(),
     color: z.string().optional(),
-    type: z.enum(['event', 'reminder', 'deadline']).default('event'),
+    createdAt: z.string(),
+    updatedAt: z.string(),
 });
-export type CalendarEvent = z.infer<typeof CalendarEventSchema>;
+export type PlannerEvent = z.infer<typeof PlannerEventSchema>;
 
 export const CourseSchema = z.object({
     id: z.string(),
@@ -52,7 +50,6 @@ export const CourseSchema = z.object({
     color: z.string().optional(),
     bgGradient: z.string().optional(),
     units: z.array(UnitSchema),
-    exams: z.array(ExamSchema),
     createdAt: z.string(),
     updatedAt: z.string(),
 });
@@ -221,7 +218,7 @@ export interface CourseProgress {
 }
 
 export interface UpcomingExam {
-    exam: Exam;
+    event: PlannerEvent;
     course: Course;
     daysLeft: number;
 }
@@ -233,7 +230,7 @@ export const LIMITS = {
     MAX_UNITS_PER_COURSE: 30,
     MAX_TASKS_PER_UNIT: 100,
     MAX_TASK_TEXT_LENGTH: 500,
-    MAX_EXAMS_PER_COURSE: 20,
+    MAX_EVENTS: 500,
     MAX_HABITS: 50,
     MAX_PERSONAL_TASKS: 100,
     MAX_UNDO_STACK: 15,

@@ -9,7 +9,8 @@ import {
     Star,
     Trash2,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, IconButton } from '../components/ui/Button'
 import { Badge, Card, EmptyState } from '../components/ui/Card'
 import { Input, Select, Textarea } from '../components/ui/Input'
@@ -33,6 +34,9 @@ const statusColors: Record<TaskStatus, string> = {
 };
 
 export function PersonalTasksPage() {
+    const location = useLocation()
+    const navigate = useNavigate()
+
     const { addPersonalTask, updatePersonalTask, deletePersonalTask, personalTasks } = usePlanner()
     const { addToast } = usePlannerApp()
 
@@ -48,6 +52,14 @@ export function PersonalTasksPage() {
         dueDateISO: '',
         note: '',
     });
+
+    useEffect(() => {
+        const state = location.state as undefined | { openCreate?: boolean }
+        if (state?.openCreate) {
+            setIsAddModalOpen(true)
+            navigate(location.pathname, { replace: true, state: {} })
+        }
+    }, [location.state, location.pathname, navigate])
 
     const filteredTasks = personalTasks.filter(
         task => filter === 'all' || task.status === filter

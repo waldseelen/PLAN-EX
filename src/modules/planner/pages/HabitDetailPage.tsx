@@ -69,7 +69,7 @@ export function HabitDetailPage() {
             if (index === 0) {
                 // Pad first week with empty cells
                 for (let i = 0; i < day.dayOfWeek; i++) {
-                    currentWeek.push(null as any);
+                    currentWeek.push(null as unknown as (typeof heatmapData)[number]);
                 }
             }
             currentWeek.push(day);

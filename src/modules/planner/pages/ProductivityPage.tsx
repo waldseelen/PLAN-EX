@@ -134,7 +134,6 @@ export function ProductivityPage() {
         } else {
             // Start/Resume
             const duration = getDuration(mode);
-            const _remainingRatio = timeLeft / duration;
             setStartTime(Date.now() - (duration - timeLeft) * 1000);
             setIsRunning(true);
         }

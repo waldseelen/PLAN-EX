@@ -32,7 +32,7 @@ export function AppLayout() {
 
     // Keyboard shortcuts
     const handleGoHome = useCallback(() => {
-        navigate('/')
+        navigate('/planner')
     }, [navigate])
 
     const handleNewRecord = useCallback(() => {
@@ -56,16 +56,16 @@ export function AppLayout() {
     const handleCreateTypeSelect = useCallback((type: CreateType) => {
         switch (type) {
             case 'task':
-                navigate('/tasks')
+                navigate('/planner/tasks', { state: { openCreate: true } })
                 break
             case 'habit':
-                navigate('/habits')
+                navigate('/habits', { state: { openCreate: true } })
                 break
             case 'course':
-                navigate('/courses')
+                navigate('/planner/courses', { state: { openCreate: true } })
                 break
             case 'event':
-                navigate('/calendar')
+                navigate('/calendar', { state: { openCreate: true } })
                 break
         }
     }, [navigate])
@@ -74,25 +74,25 @@ export function AppLayout() {
         {
             icon: <DocumentTextIcon className="w-5 h-5" />,
             label: 'Görev Ekle',
-            onClick: () => navigate('/tasks'),
+            onClick: () => navigate('/planner/tasks', { state: { openCreate: true } }),
             variant: 'default' as const,
         },
         {
             icon: <BookOpenIcon className="w-5 h-5" />,
             label: 'Ders Ekle',
-            onClick: () => navigate('/courses'),
+            onClick: () => navigate('/planner/courses', { state: { openCreate: true } }),
             variant: 'default' as const,
         },
         {
             icon: <CheckCircleIcon className="w-5 h-5" />,
             label: 'Alışkanlık Ekle',
-            onClick: () => navigate('/habits'),
+            onClick: () => navigate('/habits', { state: { openCreate: true } }),
             variant: 'success' as const,
         },
         {
             icon: <CalendarIcon className="w-5 h-5" />,
             label: 'Etkinlik/Sınav',
-            onClick: () => navigate('/calendar'),
+            onClick: () => navigate('/calendar', { state: { openCreate: true } }),
             variant: 'warning' as const,
         },
     ], [navigate])
@@ -118,7 +118,7 @@ export function AppLayout() {
                                 <Header
                                     searchQuery={searchQuery}
                                     onSearchChange={setSearchQuery}
-                                    onNewTask={() => navigate('/tasks')}
+                                    onNewTask={() => navigate('/planner/tasks')}
                                     onCalendarClick={() => navigate('/calendar')}
                                 />
 
@@ -147,15 +147,13 @@ export function AppLayout() {
                     {/* Mobile Bottom Navigation */}
                     {isMobile && <BottomNavigation />}
 
-                    {/* Smart FAB for Desktop */}
-                    {isDesktop && (
-                        <SmartFab
-                            onPrimaryAction={() => setIsCreateModalOpen(true)}
-                            secondaryActions={fabActions}
-                            position="bottom-right"
-                            icon={<PlusIcon className="w-7 h-7" />}
-                        />
-                    )}
+                    {/* Global Create FAB */}
+                    <SmartFab
+                        onPrimaryAction={() => setIsCreateModalOpen(true)}
+                        secondaryActions={fabActions}
+                        position="bottom-right"
+                        icon={<PlusIcon className="w-7 h-7" />}
+                    />
                 </div>
             </FocusModeProvider>
         </ToastProvider>

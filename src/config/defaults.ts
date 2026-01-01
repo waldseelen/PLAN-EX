@@ -12,7 +12,7 @@ import { DB_CONSTANTS, DEFAULT_POMODORO, DEFAULT_SETTINGS } from './constants'
 // Varsayılan Kategoriler
 // ============================================
 
-export interface DefaultCategory extends Omit<Category, 'createdAt' | 'updatedAt'> { }
+export type DefaultCategory = Omit<Category, 'createdAt' | 'updatedAt'>
 
 export const DEFAULT_CATEGORIES: DefaultCategory[] = [
     {

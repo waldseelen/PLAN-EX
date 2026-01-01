@@ -11,10 +11,11 @@ import {
     CompletionState,
     Course,
     COURSE_COLORS,
-    Exam,
     LectureNoteMeta,
     LIMITS,
     PersonalTask,
+    PlannerEvent,
+    PlannerEventType,
     Task,
     TaskStatus,
     UndoSnapshot,
@@ -32,6 +33,7 @@ function generateId(): string {
 interface PlannerState {
     // Data
     courses: Course[]
+    events: PlannerEvent[]
     completionState: CompletionState
     undoStack: UndoSnapshot[]
     personalTasks: PersonalTask[]
@@ -40,11 +42,13 @@ interface PlannerState {
     // State
     isLoading: boolean
     isInitialized: boolean
+    hasHydrated: boolean
 }
 
 interface PlannerActions {
     // Initialize
     initialize: () => void
+    setHasHydrated: (hasHydrated: boolean) => void
 
     // Courses
     addCourse: (title: string, code?: string) => void
@@ -64,9 +68,15 @@ interface PlannerActions {
     toggleTaskCompletion: (taskId: string) => void
     updateTaskStatus: (taskId: string, status: TaskStatus, courseId: string, unitId: string) => void
 
-    // Exams
-    addExam: (courseId: string, title: string, examDateISO: string, description?: string) => void
-    updateExam: (courseId: string, examId: string, updates: Partial<Exam>) => void
+    // Events / Exams
+    addEvent: (data: { type: PlannerEventType; title: string; dateISO: string; courseId?: string; description?: string; color?: string }) => void
+    updateEvent: (id: string, updates: Partial<PlannerEvent>) => void
+    deleteEvent: (id: string) => void
+    getCourseEvents: (courseId: string) => PlannerEvent[]
+
+    // Backward-compatible exam helpers
+    addExam: (courseId: string, title: string, dateISO: string, description?: string) => void
+    updateExam: (courseId: string, examId: string, updates: Partial<PlannerEvent>) => void
     deleteExam: (courseId: string, examId: string) => void
 
     // Personal Tasks
@@ -94,12 +104,14 @@ type PlannerStore = PlannerState & PlannerActions
 
 const initialState: PlannerState = {
     courses: [],
+    events: [],
     completionState: { completedTaskIds: [], completionHistory: {} },
     undoStack: [],
     personalTasks: [],
     lectureNotesMeta: [],
     isLoading: false,
     isInitialized: false,
+    hasHydrated: false,
 }
 
 export const usePlannerStore = create<PlannerStore>()(
@@ -109,6 +121,10 @@ export const usePlannerStore = create<PlannerStore>()(
 
             initialize: () => {
                 set({ isInitialized: true, isLoading: false })
+            },
+
+            setHasHydrated: (hasHydrated) => {
+                set({ hasHydrated })
             },
 
             // ================== COURSES ==================
@@ -126,7 +142,6 @@ export const usePlannerStore = create<PlannerStore>()(
                     code,
                     color: COURSE_COLORS[colorIndex],
                     units: [],
-                    exams: [],
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
                 }
@@ -335,56 +350,64 @@ export const usePlannerStore = create<PlannerStore>()(
                 }
             },
 
-            // ================== EXAMS ==================
-            addExam: (courseId, title, examDateISO, description) => {
-                const newExam: Exam = {
+            // ================== EVENTS / EXAMS ==================
+            addEvent: (data) => {
+                const state = get()
+                const now = new Date().toISOString()
+
+                const newEvent: PlannerEvent = {
                     id: generateId(),
-                    title,
-                    examDateISO,
-                    description,
+                    type: data.type,
+                    courseId: data.courseId,
+                    title: data.title,
+                    dateISO: data.dateISO,
+                    description: data.description,
+                    color: data.color,
+                    createdAt: now,
+                    updatedAt: now,
                 }
 
+                set({ events: [...state.events, newEvent] })
+            },
+
+            updateEvent: (id, updates) => {
+                const { id: _ignoredId, createdAt: _ignoredCreatedAt, updatedAt: _ignoredUpdatedAt, ...safeUpdates } = updates
+                void _ignoredId
+                void _ignoredCreatedAt
+                void _ignoredUpdatedAt
                 set(state => ({
-                    courses: state.courses.map(c =>
-                        c.id === courseId
-                            ? {
-                                ...c,
-                                exams: [...c.exams, newExam],
-                                updatedAt: new Date().toISOString(),
-                            }
-                            : c
+                    events: state.events.map(e =>
+                        e.id === id
+                            ? { ...e, ...safeUpdates, updatedAt: new Date().toISOString() }
+                            : e
                     ),
                 }))
             },
 
-            updateExam: (courseId, examId, updates) => {
+            deleteEvent: (id) => {
                 set(state => ({
-                    courses: state.courses.map(c =>
-                        c.id === courseId
-                            ? {
-                                ...c,
-                                exams: c.exams.map(e =>
-                                    e.id === examId ? { ...e, ...updates } : e
-                                ),
-                                updatedAt: new Date().toISOString(),
-                            }
-                            : c
-                    ),
+                    events: state.events.filter(e => e.id !== id),
                 }))
             },
 
-            deleteExam: (courseId, examId) => {
-                set(state => ({
-                    courses: state.courses.map(c =>
-                        c.id === courseId
-                            ? {
-                                ...c,
-                                exams: c.exams.filter(e => e.id !== examId),
-                                updatedAt: new Date().toISOString(),
-                            }
-                            : c
-                    ),
-                }))
+            getCourseEvents: (courseId) => {
+                return get()
+                    .events
+                    .filter(e => e.courseId === courseId)
+                    .sort((a, b) => a.dateISO.localeCompare(b.dateISO))
+            },
+
+            // Backward-compatible exam helpers
+            addExam: (courseId, title, dateISO, description) => {
+                get().addEvent({ type: 'exam', courseId, title, dateISO, description })
+            },
+
+            updateExam: (_courseId, examId, updates) => {
+                get().updateEvent(examId, updates)
+            },
+
+            deleteExam: (_courseId, examId) => {
+                get().deleteEvent(examId)
             },
 
             // ================== PERSONAL TASKS ==================
@@ -495,9 +518,117 @@ export const usePlannerStore = create<PlannerStore>()(
         }),
         {
             name: 'lifeflow-planner',
-            version: 1,
+            version: 2,
+            migrate: (persistedState, version) => {
+                if (version >= 2) return persistedState as PlannerStore
+
+                type LegacyExam = {
+                    id?: unknown
+                    title?: unknown
+                    examDateISO?: unknown
+                    dateISO?: unknown
+                    description?: unknown
+                }
+                type LegacyCourse = {
+                    id?: unknown
+                    color?: unknown
+                    exams?: unknown
+                }
+
+                const state = persistedState as unknown as { courses?: unknown; events?: unknown } & Record<string, unknown>
+                const now = new Date().toISOString()
+
+                const courses: LegacyCourse[] = Array.isArray(state?.courses) ? (state.courses as LegacyCourse[]) : []
+                const existingEvents: PlannerEvent[] = Array.isArray(state?.events) ? (state.events as PlannerEvent[]) : []
+
+                const migratedEvents: PlannerEvent[] = [...existingEvents]
+
+                for (const course of courses) {
+                    const exams: LegacyExam[] = Array.isArray(course?.exams) ? (course.exams as LegacyExam[]) : []
+                    for (const exam of exams) {
+                        migratedEvents.push({
+                            id: exam?.id ?? `${now}-${Math.random().toString(36).slice(2, 9)}`,
+                            type: 'exam',
+                            courseId: course?.id,
+                            title: exam?.title ?? 'Sınav',
+                            dateISO: exam?.examDateISO ?? exam?.dateISO ?? now.split('T')[0],
+                            description: exam?.description,
+                            color: course?.color,
+                            createdAt: now,
+                            updatedAt: now,
+                        } as PlannerEvent)
+                    }
+                    delete course.exams
+                }
+
+                const seen = new Set<string>()
+                const dedupedEvents: PlannerEvent[] = []
+                for (const e of migratedEvents) {
+                    if (!e?.id || seen.has(e.id)) continue
+                    seen.add(e.id)
+                    dedupedEvents.push(e)
+                }
+
+                return {
+                    ...state,
+                    courses,
+                    events: dedupedEvents,
+                    hasHydrated: false,
+                } as PlannerStore
+            },
+            onRehydrateStorage: () => (state, error) => {
+                if (error) {
+                    console.error('Failed to hydrate planner store:', error)
+                }
+
+                state?.setHasHydrated(true)
+
+                // Legacy CalendarPage localStorage key migration
+                const LEGACY_CALENDAR_EVENTS_KEY = 'planex-calendar-events'
+                try {
+                    const raw = localStorage.getItem(LEGACY_CALENDAR_EVENTS_KEY)
+                    if (!raw) return
+
+                    const parsed = JSON.parse(raw)
+                    if (!Array.isArray(parsed)) return
+
+                    const now = new Date().toISOString()
+                    const migrated: PlannerEvent[] = parsed
+                        .filter((e: unknown) => {
+                            if (!e || typeof e !== 'object') return false
+                            const obj = e as Record<string, unknown>
+                            return typeof obj['title'] === 'string' && typeof obj['dateISO'] === 'string'
+                        })
+                        .map((e: unknown) => {
+                            const obj = e as Record<string, unknown>
+                            return {
+                                id: typeof obj['id'] === 'string' ? obj['id'] : `${now}-${Math.random().toString(36).slice(2, 9)}`,
+                                type: 'event',
+                                courseId: typeof obj['courseId'] === 'string' ? obj['courseId'] : undefined,
+                                title: obj['title'] as string,
+                                dateISO: obj['dateISO'] as string,
+                                description: typeof obj['description'] === 'string' ? obj['description'] : undefined,
+                                color: typeof obj['color'] === 'string' ? obj['color'] : undefined,
+                                createdAt: now,
+                                updatedAt: now,
+                            } as PlannerEvent
+                        })
+
+                    if (migrated.length > 0) {
+                        const existing = state?.events ?? []
+                        const seen = new Set<string>(existing.map(e => e.id))
+                        const merged = [...existing, ...migrated.filter(e => !seen.has(e.id))]
+                        usePlannerStore.setState({ events: merged }, false)
+                    }
+
+                    localStorage.removeItem(LEGACY_CALENDAR_EVENTS_KEY)
+                } catch (e) {
+                    console.warn('Failed to migrate legacy calendar events:', e)
+                }
+            },
             partialize: (state) => ({
                 courses: state.courses,
+                events: state.events,
                 completionState: state.completionState,
                 undoStack: state.undoStack,
                 personalTasks: state.personalTasks,

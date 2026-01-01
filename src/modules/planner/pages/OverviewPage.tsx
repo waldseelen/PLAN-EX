@@ -15,21 +15,22 @@ import { Link } from 'react-router-dom'
 import { QuickNotes } from '../components/features/QuickNotes'
 import { Button } from '../components/ui/Button'
 import { Badge, Card, CardHeader, ProgressBar, ProgressRing } from '../components/ui/Card'
-import { calculateCourseProgress, cn, getUpcomingExams } from '../lib/utils'
+import { calculateCourseProgress, cn, getUpcomingEvents } from '../lib/utils'
 import { usePlannerHabits, usePlannerStore } from '../store'
 
 // Quick navigation items
 const quickNavItems = [
-    { to: '/courses', icon: BookOpen, label: 'Dersler', color: 'bg-blue-500', description: 'Ders ve görevlerini yönet' },
+    { to: '/planner/courses', icon: BookOpen, label: 'Dersler', color: 'bg-blue-500', description: 'Ders ve görevlerini yönet' },
     { to: '/calendar', icon: Calendar, label: 'Takvim', color: 'bg-purple-500', description: 'Sınavlar ve etkinlikler' },
-    { to: '/tasks', icon: ListTodo, label: 'Görevler', color: 'bg-green-500', description: 'Kişisel görevlerin' },
+    { to: '/planner/tasks', icon: ListTodo, label: 'Görevler', color: 'bg-green-500', description: 'Kişisel görevlerin' },
     { to: '/habits', icon: Target, label: 'Alışkanlıklar', color: 'bg-orange-500', description: 'Günlük rutinlerin' },
-    { to: '/productivity', icon: Timer, label: 'Pomodoro', color: 'bg-red-500', description: 'Odaklan ve çalış' },
-    { to: '/statistics', icon: BarChart3, label: 'İstatistikler', color: 'bg-indigo-500', description: 'İlerleme raporu' },
+    { to: '/planner/productivity', icon: Timer, label: 'Pomodoro', color: 'bg-red-500', description: 'Odaklan ve çalış' },
+    { to: '/planner/statistics', icon: BarChart3, label: 'İstatistikler', color: 'bg-indigo-500', description: 'İlerleme raporu' },
 ]
 
 export function OverviewPage() {
     const courses = usePlannerStore(state => state.courses)
+    const events = usePlannerStore(state => state.events)
     const completionState = usePlannerStore(state => state.completionState)
     const { getTodayHabits } = usePlannerHabits()
 
@@ -62,8 +63,8 @@ export function OverviewPage() {
     }, [courses, completionState, todayHabits])
 
     const upcomingExams = useMemo(
-        () => getUpcomingExams(courses, 14),
-        [courses]
+        () => getUpcomingEvents(courses, events, 14),
+        [courses, events]
     )
 
     const courseProgress = useMemo(
@@ -170,7 +171,7 @@ export function OverviewPage() {
                         <CardHeader
                             title="Ders İlerlemesi"
                             action={
-                                <Link to="/courses">
+                                <Link to="/planner/courses">
                                     <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
                                         Tümü
                                     </Button>
@@ -182,7 +183,7 @@ export function OverviewPage() {
                             <div className="text-center py-8">
                                 <BookOpen className="w-12 h-12 text-tertiary mx-auto mb-3" />
                                 <p className="text-secondary">Henüz ders eklenmemiş</p>
-                                <Link to="/courses">
+                                <Link to="/planner/courses">
                                     <Button variant="primary" size="sm" className="mt-3">
                                         Ders Ekle
                                     </Button>
@@ -190,8 +191,8 @@ export function OverviewPage() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {courseProgress.slice(0, 4).map(({ course, total, completed, percentage }) => (
-                                    <Link key={course.id} to={`/courses/${course.id}`}>
+                                {courseProgress.slice(0, 4).map(({ course, percentage }) => (
+                                    <Link key={course.id} to={`/planner/courses/${course.id}`}>
                                         <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary transition-colors">
                                             <div
                                                 className="w-3 h-3 rounded-full flex-shrink-0"
@@ -231,9 +232,9 @@ export function OverviewPage() {
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {upcomingExams.slice(0, 4).map(({ exam, course, daysLeft }) => (
+                                {upcomingExams.slice(0, 4).map(({ event, course, daysLeft }) => (
                                     <div
-                                        key={exam.id}
+                                        key={event.id}
                                         className={cn(
                                             'flex items-center gap-4 p-3 rounded-lg',
                                             daysLeft <= 3 ? 'bg-red-500/10' : daysLeft <= 7 ? 'bg-orange-500/10' : 'bg-secondary'
@@ -244,7 +245,7 @@ export function OverviewPage() {
                                             style={{ backgroundColor: course.color }}
                                         />
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-primary truncate">{exam.title}</p>
+                                            <p className="font-medium text-primary truncate">{event.title}</p>
                                             <p className="text-sm text-secondary">{course.title}</p>
                                         </div>
                                         <Badge

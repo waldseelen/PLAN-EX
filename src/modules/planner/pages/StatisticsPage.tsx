@@ -8,15 +8,14 @@ import { usePlannerHabitsStore, usePlannerStore } from '../store';
 // Get Pomodoro sessions from localStorage
 function getPomodoroStats() {
     try {
-        const storedSessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
+        const storedSessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}') as Record<string, unknown>;
         const today = new Date().toISOString().split('T')[0];
-        const todaySessions = storedSessions[today] || 0;
+        const todaySessions = typeof storedSessions[today] === 'number' ? storedSessions[today] : 0;
 
         // Calculate total sessions
-        let totalSessions = 0;
-        Object.values(storedSessions).forEach((count: any) => {
-            totalSessions += count;
-        });
+        const totalSessions = Object.values(storedSessions)
+            .filter((count): count is number => typeof count === 'number')
+            .reduce((sum, count) => sum + count, 0);
 
         return { todaySessions, totalSessions };
     } catch {
@@ -38,7 +37,7 @@ export function StatisticsPage() {
         return last7Days.map(dateISO => {
             // Count tasks completed on this day
             let completedTasks = 0;
-            Object.entries(completionState.completionHistory).forEach(([taskId, completionDate]) => {
+            Object.entries(completionState.completionHistory).forEach(([_taskId, completionDate]) => {
                 if (completionDate.startsWith(dateISO)) {
                     completedTasks++;
                 }
@@ -68,7 +67,7 @@ export function StatisticsPage() {
     // Overall stats
     const overallStats = useMemo(() => {
         let totalTasks = 0;
-        let completedTasks = completionState.completedTaskIds.length;
+        const completedTasks = completionState.completedTaskIds.length;
 
         courses.forEach(course => {
             course.units.forEach(unit => {
@@ -195,7 +194,7 @@ export function StatisticsPage() {
                     <CardHeader title="Haftalık Aktivite" subtitle="Son 7 günlük tamamlama" />
 
                     <div className="flex items-end justify-between gap-2 h-48 mt-4">
-                        {dailyStats.map((day, index) => {
+                        {dailyStats.map((day) => {
                             const totalHeight = ((day.completedTasks + day.completedHabits) / maxChartValue) * 100;
                             const taskHeight = totalHeight > 0 ? (day.completedTasks / (day.completedTasks + day.completedHabits)) * 100 : 0;
 

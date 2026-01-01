@@ -1,5 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
-import type { Course, Exam, Habit, HabitLog, Task } from '../types';
+import type { Course, Habit, HabitLog, PlannerEvent, Task } from '../types';
 
 // ================== CLASS NAME UTILITY ==================
 
@@ -300,17 +300,20 @@ export function getTodayTasks(courses: Course[], completedTaskIds: string[]): Ta
 
 // ================== EXAM UTILITIES ==================
 
-export function getUpcomingExams(courses: Course[], daysAhead: number = 30): Array<{ exam: Exam; course: Course; daysLeft: number }> {
-    const upcoming: Array<{ exam: Exam; course: Course; daysLeft: number }> = [];
-    const _today = getToday(); // prefixed with underscore to avoid unused var error
+export function getUpcomingEvents(
+    courses: Course[],
+    events: PlannerEvent[],
+    daysAhead: number = 30
+): Array<{ event: PlannerEvent; course: Course; daysLeft: number }> {
+    const upcoming: Array<{ event: PlannerEvent; course: Course; daysLeft: number }> = [];
 
-    courses.forEach(course => {
-        course.exams.forEach(exam => {
-            const daysLeft = getDaysUntil(exam.examDateISO);
-            if (daysLeft >= 0 && daysLeft <= daysAhead) {
-                upcoming.push({ exam, course, daysLeft });
-            }
-        });
+    events.forEach(event => {
+        const daysLeft = getDaysUntil(event.dateISO);
+        if (daysLeft >= 0 && daysLeft <= daysAhead) {
+            const course = event.courseId ? courses.find(c => c.id === event.courseId) : undefined;
+            if (!course) return;
+            upcoming.push({ event, course, daysLeft });
+        }
     });
 
     return upcoming.sort((a, b) => a.daysLeft - b.daysLeft);
@@ -354,7 +357,7 @@ function escapeRegex(string: string): string {
 
 // ================== DEBOUNCE ==================
 
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number
 ): (...args: Parameters<T>) => void {
@@ -368,7 +371,7 @@ export function debounce<T extends (...args: any[]) => any>(
 
 // ================== THROTTLE ==================
 
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
     func: T,
     limit: number
 ): (...args: Parameters<T>) => void {

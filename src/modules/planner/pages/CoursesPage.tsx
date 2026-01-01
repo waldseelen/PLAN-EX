@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { BookOpen, Edit2, GraduationCap, Plus, Trash2 } from 'lucide-react'
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button, IconButton } from '../components/ui/Button'
 import { Card, EmptyState, ProgressBar } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
@@ -11,18 +11,39 @@ import { usePlannerApp, usePlannerStore } from '../store'
 import { COURSE_COLORS, Course } from '../types'
 
 export function CoursesPage() {
+    const location = useLocation()
+    const navigate = useNavigate()
+
     const courses = usePlannerStore(state => state.courses)
+    const events = usePlannerStore(state => state.events)
     const completionState = usePlannerStore(state => state.completionState)
     const addCourse = usePlannerStore(state => state.addCourse)
     const updateCourse = usePlannerStore(state => state.updateCourse)
     const deleteCourse = usePlannerStore(state => state.deleteCourse)
     const { addToast } = usePlannerApp()
 
+    const examCountByCourseId = useMemo(() => {
+        const map = new Map<string, number>()
+        events.forEach(e => {
+            if (e.type !== 'exam' || !e.courseId) return
+            map.set(e.courseId, (map.get(e.courseId) ?? 0) + 1)
+        })
+        return map
+    }, [events])
+
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({ title: '', code: '', color: COURSE_COLORS[0] as string });
+
+    useEffect(() => {
+        const state = location.state as undefined | { openCreate?: boolean }
+        if (state?.openCreate) {
+            setIsAddModalOpen(true)
+            navigate(location.pathname, { replace: true, state: {} })
+        }
+    }, [location.state, location.pathname, navigate])
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -139,7 +160,7 @@ export function CoursesPage() {
                                             </div>
                                         </div>
 
-                                        <Link to={`/courses/${course.id}`}>
+                                        <Link to={`/planner/courses/${course.id}`}>
                                             {/* Color Bar */}
                                             <div
                                                 className="h-2 rounded-t-lg -mx-4 -mt-4 mb-4"
@@ -173,7 +194,7 @@ export function CoursesPage() {
                                                     <p className="text-xs text-secondary">Görev</p>
                                                 </div>
                                                 <div className="p-2 bg-secondary rounded-lg">
-                                                    <p className="text-lg font-semibold text-primary">{course.exams.length}</p>
+                                                    <p className="text-lg font-semibold text-primary">{examCountByCourseId.get(course.id) ?? 0}</p>
                                                     <p className="text-xs text-secondary">Sınav</p>
                                                 </div>
                                             </div>

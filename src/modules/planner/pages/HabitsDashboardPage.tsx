@@ -12,8 +12,8 @@ import {
     Target,
     Trash2,
 } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button, IconButton } from '../components/ui/Button';
 import { Badge, Card, EmptyState, ProgressBar } from '../components/ui/Card';
 import { Input, Select } from '../components/ui/Input';
@@ -31,6 +31,9 @@ const frequencyTypeLabels = {
 const dayLabels = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
 
 export function HabitsDashboardPage() {
+    const location = useLocation()
+    const navigate = useNavigate()
+
     const habits = usePlannerHabitsStore(state => state.habits)
     const addHabit = usePlannerHabitsStore(state => state.addHabit)
     const updateHabit = usePlannerHabitsStore(state => state.updateHabit)
@@ -38,8 +41,6 @@ export function HabitsDashboardPage() {
     const logHabit = usePlannerHabitsStore(state => state.logHabit)
     const getTodayHabits = usePlannerHabitsStore(state => state.getTodayHabits)
     const getHabitWithStats = usePlannerHabitsStore(state => state.getHabitWithStats)
-    const archiveHabit = usePlannerHabitsStore(state => state.archiveHabit)
-    const unarchiveHabit = usePlannerHabitsStore(state => state.unarchiveHabit)
     const { addToast } = usePlannerApp()
 
     const [showArchived, setShowArchived] = useState(false);
@@ -61,6 +62,14 @@ export function HabitsDashboardPage() {
         specificDays: [1, 2, 3, 4, 5] as number[],
         everyXDays: 1,
     });
+
+    useEffect(() => {
+        const state = location.state as undefined | { openCreate?: boolean }
+        if (state?.openCreate) {
+            setIsAddModalOpen(true)
+            navigate(location.pathname, { replace: true, state: {} })
+        }
+    }, [location.state, location.pathname, navigate])
 
     const todayHabits = useMemo(() => getTodayHabits(), [getTodayHabits]);
     const todayCompleted = todayHabits.filter(h => h.isCompletedToday).length;

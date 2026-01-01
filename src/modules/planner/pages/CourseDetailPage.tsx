@@ -1,824 +1,595 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import {
-    ArrowLeft,
-    Calendar,
-    CheckCircle,
-    ChevronDown,
-    ChevronRight,
-    Circle,
-    Clock,
-    Edit2,
-    ExternalLink,
-    FileText,
-    MessageSquare,
-    Plus,
-    Search as SearchIcon,
-    Star,
-    Trash2,
-    Upload,
-    Youtube
-} from 'lucide-react';
-import React, { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, IconButton } from '../components/ui/Button';
-import { Badge, Card, EmptyState, ProgressBar } from '../components/ui/Card';
-import { Input, Select, Textarea } from '../components/ui/Input';
-import { Modal } from '../components/ui/Modal';
-import { deleteLectureNote, getLectureNote, saveLectureNote } from '../lib/storage';
-import {
-    calculateCourseProgress,
-    cn,
-    formatDateDisplay,
-    generateId,
-    getDaysUntil,
-} from '../lib/utils';
-import { usePlannerApp, usePlannerStore } from '../store';
-import { Exam, LIMITS, Task, TaskStatus, Unit } from '../types';
+import { ArrowLeft, CalendarDays, CheckCircle2, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Button, IconButton } from '../components/ui/Button'
+import { Badge, Card, EmptyState } from '../components/ui/Card'
+import { Input, Select, Textarea } from '../components/ui/Input'
+import { Modal } from '../components/ui/Modal'
+import { cn, formatDateDisplay, getDaysUntil } from '../lib/utils'
+import { usePlannerStore } from '../store'
+import type { PlannerEvent, PlannerEventType, Task, TaskStatus, Unit } from '../types'
 
-const statusLabels: Record<TaskStatus, string> = {
-    todo: 'Yapılacak',
-    'in-progress': 'Devam Ediyor',
-    review: 'İnceleme',
-    done: 'Tamamlandı',
-};
+type TaskWithUnit = { task: Task; unit: Unit }
 
-const statusColors: Record<TaskStatus, string> = {
-    todo: '#94a3b8',
-    'in-progress': '#3b82f6',
-    review: '#f59e0b',
-    done: '#22c55e',
-};
+function sortTasksForList(tasks: TaskWithUnit[]): TaskWithUnit[] {
+    return [...tasks].sort((a, b) => {
+        const aDue = a.task.dueDateISO ? new Date(a.task.dueDateISO).getTime() : Infinity
+        const bDue = b.task.dueDateISO ? new Date(b.task.dueDateISO).getTime() : Infinity
+        if (aDue !== bDue) return aDue - bDue
+        return a.task.createdAt.localeCompare(b.task.createdAt)
+    })
+}
 
 export function CourseDetailPage() {
-    const { courseId } = useParams<{ courseId: string }>();
-    const navigate = useNavigate();
+    const { courseId } = useParams<{ courseId: string }>()
+    const navigate = useNavigate()
 
-    const courses = usePlannerStore(state => state.courses);
-    const completionState = usePlannerStore(state => state.completionState);
-    const lectureNotesMeta = usePlannerStore(state => state.lectureNotesMeta);
-    const updateCourse = usePlannerStore(state => state.updateCourse);
-    const addUnit = usePlannerStore(state => state.addUnit);
-    const updateUnit = usePlannerStore(state => state.updateUnit);
-    const deleteUnit = usePlannerStore(state => state.deleteUnit);
-    const addTask = usePlannerStore(state => state.addTask);
-    const updateTask = usePlannerStore(state => state.updateTask);
-    const deleteTask = usePlannerStore(state => state.deleteTask);
-    const toggleTaskCompletion = usePlannerStore(state => state.toggleTaskCompletion);
-    const addExam = usePlannerStore(state => state.addExam);
-    const updateExam = usePlannerStore(state => state.updateExam);
-    const deleteExam = usePlannerStore(state => state.deleteExam);
-    const addLectureNoteMeta = usePlannerStore(state => state.addLectureNoteMeta);
-    const deleteLectureNoteMeta = usePlannerStore(state => state.deleteLectureNoteMeta);
+    const hasHydrated = usePlannerStore(state => state.hasHydrated)
+    const courses = usePlannerStore(state => state.courses)
+    const events = usePlannerStore(state => state.events)
+    const completedTaskIds = usePlannerStore(state => state.completionState.completedTaskIds)
 
-    const { addToast } = usePlannerApp();
+    const updateCourse = usePlannerStore(state => state.updateCourse)
+    const addUnit = usePlannerStore(state => state.addUnit)
+    const addTask = usePlannerStore(state => state.addTask)
+    const updateTask = usePlannerStore(state => state.updateTask)
+    const deleteTask = usePlannerStore(state => state.deleteTask)
+    const toggleTaskCompletion = usePlannerStore(state => state.toggleTaskCompletion)
 
-    const course = courses.find((c) => c.id === courseId);
+    const addEvent = usePlannerStore(state => state.addEvent)
+    const updateEvent = usePlannerStore(state => state.updateEvent)
+    const deleteEvent = usePlannerStore(state => state.deleteEvent)
 
-    // Debug logging
-    console.log('CourseDetailPage Debug:', {
-        courseId,
-        coursesCount: courses.length,
-        courseIds: courses.map(c => c.id),
-        foundCourse: course ? 'YES' : 'NO'
-    });
+    const course = useMemo(() => courses.find(c => c.id === courseId), [courses, courseId])
 
-    const [activeTab, setActiveTab] = useState<'units' | 'exams' | 'notes'>('units');
-    const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set());
-    const [isAddUnitOpen, setIsAddUnitOpen] = useState(false);
-    const [isAddTaskOpen, setIsAddTaskOpen] = useState<string | null>(null);
-    const [isAddExamOpen, setIsAddExamOpen] = useState(false);
-    const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
-    const [editingTask, setEditingTask] = useState<{ task: Task; unitId: string } | null>(null);
-    const [editingExam, setEditingExam] = useState<Exam | null>(null);
-    const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; id: string; parentId?: string } | null>(null);
+    const courseEvents = useMemo(() => {
+        if (!course) return []
+        return events
+            .filter(e => e.courseId === course.id)
+            .sort((a, b) => a.dateISO.localeCompare(b.dateISO))
+    }, [events, course])
 
-    // Form states
-    const [unitForm, setUnitForm] = useState({ title: '' });
-    const [taskForm, setTaskForm] = useState({
+    const tasks = useMemo(() => {
+        if (!course) return []
+        const flattened: TaskWithUnit[] = []
+        for (const unit of course.units) {
+            for (const task of unit.tasks) {
+                flattened.push({ task, unit })
+            }
+        }
+        return sortTasksForList(flattened)
+    }, [course])
+
+    const nextEvent = useMemo(() => {
+        const upcoming = courseEvents
+            .map(e => ({ event: e, daysLeft: getDaysUntil(e.dateISO) }))
+            .filter(x => x.daysLeft >= 0)
+            .sort((a, b) => a.daysLeft - b.daysLeft)
+        return upcoming[0] || null
+    }, [courseEvents])
+
+    const [isEditCourseOpen, setIsEditCourseOpen] = useState(false)
+    const [courseForm, setCourseForm] = useState<{ title: string; code: string; color: string }>({
+        title: course?.title ?? '',
+        code: course?.code ?? '',
+        color: course?.color ?? '#6366f1',
+    })
+
+    const [taskModalOpen, setTaskModalOpen] = useState(false)
+    const [editingTask, setEditingTask] = useState<{ task: Task; unitId: string } | null>(null)
+    const [taskForm, setTaskForm] = useState<{
+        text: string
+        status: TaskStatus
+        dueDateISO: string
+        note: string
+        unitId: string
+    }>({
         text: '',
-        status: 'todo' as TaskStatus,
-        isPriority: false,
+        status: 'todo',
         dueDateISO: '',
         note: '',
-    });
-    const [examForm, setExamForm] = useState({ title: '', examDateISO: '', description: '' });
+        unitId: '',
+    })
 
-    if (!course) {
+    const [eventModalOpen, setEventModalOpen] = useState(false)
+    const [editingEvent, setEditingEvent] = useState<PlannerEvent | null>(null)
+    const [eventForm, setEventForm] = useState<{
+        type: PlannerEventType
+        title: string
+        dateISO: string
+        description: string
+        color: string
+    }>({
+        type: 'exam',
+        title: '',
+        dateISO: '',
+        description: '',
+        color: '#f97316',
+    })
+
+    if (!hasHydrated) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-center">
-                    <p className="text-secondary mb-4">Ders bulunamadı</p>
-                    <Link to="/courses">
+                    <p className="text-secondary">Yükleniyor...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!courseId || !course) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="text-center space-y-4">
+                    <p className="text-secondary">Ders bulunamadı</p>
+                    <Link to="/planner/courses">
                         <Button>Derslere Dön</Button>
                     </Link>
                 </div>
             </div>
-        );
+        )
     }
 
-    const progress = calculateCourseProgress(course, completionState.completedTaskIds);
+    const unitOptions = course.units.map(u => ({ value: u.id, label: u.title }))
 
-    const toggleUnit = (unitId: string) => {
-        const newExpanded = new Set(expandedUnits);
-        if (newExpanded.has(unitId)) {
-            newExpanded.delete(unitId);
+    const openNewTask = () => {
+        let unitId: string | undefined = course.units.at(0)?.id
+        if (!unitId) {
+            addUnit(course.id, 'Genel')
+            unitId = usePlannerStore.getState().courses.find(c => c.id === course.id)?.units.at(0)?.id
+        }
+
+        setEditingTask(null)
+        setTaskForm({
+            text: '',
+            status: 'todo',
+            dueDateISO: '',
+            note: '',
+            unitId: unitId || '',
+        })
+        setTaskModalOpen(true)
+    }
+
+    const openEditTask = (task: Task, unitId: string) => {
+        setEditingTask({ task, unitId })
+        setTaskForm({
+            text: task.text,
+            status: task.status,
+            dueDateISO: task.dueDateISO ?? '',
+            note: task.note ?? '',
+            unitId,
+        })
+        setTaskModalOpen(true)
+    }
+
+    const saveTask = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!taskForm.text.trim()) return
+
+        const unitId = taskForm.unitId || course.units[0]?.id
+        if (!unitId) return
+
+        if (editingTask) {
+            updateTask(course.id, unitId, editingTask.task.id, {
+                text: taskForm.text,
+                status: taskForm.status,
+                dueDateISO: taskForm.dueDateISO || undefined,
+                note: taskForm.note || undefined,
+            })
         } else {
-            newExpanded.add(unitId);
+            addTask(course.id, unitId, taskForm.text, {
+                status: taskForm.status,
+                dueDateISO: taskForm.dueDateISO || undefined,
+                note: taskForm.note || undefined,
+            })
         }
-        setExpandedUnits(newExpanded);
-    };
 
-    const handleAddUnit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!unitForm.title.trim()) {
-            addToast('error', 'Ünite adı gerekli');
-            return;
-        }
-        addUnit(course.id, unitForm.title);
-        setUnitForm({ title: '' });
-        setIsAddUnitOpen(false);
-        addToast('success', 'Ünite eklendi');
-    };
+        setTaskModalOpen(false)
+        setEditingTask(null)
+    }
 
-    const handleAddTask = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!taskForm.text.trim() || !isAddTaskOpen) {
-            addToast('error', 'Görev metni gerekli');
-            return;
-        }
-        addTask(course.id, isAddTaskOpen, taskForm.text, {
-            status: taskForm.status,
-            isPriority: taskForm.isPriority,
-            dueDateISO: taskForm.dueDateISO || undefined,
-            note: taskForm.note || undefined,
-        });
-        setTaskForm({ text: '', status: 'todo', isPriority: false, dueDateISO: '', note: '' });
-        setIsAddTaskOpen(null);
-        addToast('success', 'Görev eklendi');
-    };
+    const openNewEvent = (type: PlannerEventType = 'event') => {
+        setEditingEvent(null)
+        setEventForm({
+            type,
+            title: '',
+            dateISO: '',
+            description: '',
+            color: type === 'exam' ? '#f97316' : '#6366f1',
+        })
+        setEventModalOpen(true)
+    }
 
-    const handleAddExam = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!examForm.title.trim() || !examForm.examDateISO) {
-            addToast('error', 'Sınav adı ve tarihi gerekli');
-            return;
-        }
-        if (editingExam) {
-            updateExam(course.id, editingExam.id, examForm);
-            addToast('success', 'Sınav güncellendi');
+    const openEditEvent = (event: PlannerEvent) => {
+        setEditingEvent(event)
+        setEventForm({
+            type: event.type,
+            title: event.title,
+            dateISO: event.dateISO,
+            description: event.description ?? '',
+            color: event.color ?? (event.type === 'exam' ? '#f97316' : '#6366f1'),
+        })
+        setEventModalOpen(true)
+    }
+
+    const saveEvent = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!eventForm.title.trim() || !eventForm.dateISO) return
+
+        if (editingEvent) {
+            updateEvent(editingEvent.id, {
+                type: eventForm.type,
+                title: eventForm.title,
+                dateISO: eventForm.dateISO,
+                description: eventForm.description || undefined,
+                color: eventForm.color || undefined,
+                courseId: course.id,
+            })
         } else {
-            addExam(course.id, examForm.title, examForm.examDateISO);
-            addToast('success', 'Sınav eklendi');
-        }
-        setExamForm({ title: '', examDateISO: '', description: '' });
-        setIsAddExamOpen(false);
-        setEditingExam(null);
-    };
-
-    const handleDelete = () => {
-        if (!deleteConfirm) return;
-
-        if (deleteConfirm.type === 'unit') {
-            deleteUnit(course.id, deleteConfirm.id);
-            addToast('success', 'Ünite silindi');
-        } else if (deleteConfirm.type === 'task' && deleteConfirm.parentId) {
-            deleteTask(course.id, deleteConfirm.parentId, deleteConfirm.id);
-            addToast('success', 'Görev silindi');
-        } else if (deleteConfirm.type === 'exam') {
-            deleteExam(course.id, deleteConfirm.id);
-            addToast('success', 'Sınav silindi');
-        }
-
-        setDeleteConfirm(null);
-    };
-
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (file.size > LIMITS.MAX_PDF_SIZE_MB * 1024 * 1024) {
-            addToast('error', `Dosya boyutu ${LIMITS.MAX_PDF_SIZE_MB}MB'dan küçük olmalı`);
-            return;
-        }
-
-        try {
-            const arrayBuffer = await file.arrayBuffer();
-            const noteId = generateId();
-
-            await saveLectureNote({
-                id: noteId,
+            addEvent({
+                type: eventForm.type,
                 courseId: course.id,
-                data: arrayBuffer,
-                mimeType: file.type,
-            });
-
-            addLectureNoteMeta({
-                id: noteId,
-                courseId: course.id,
-                name: file.name.replace('.pdf', ''),
-                fileName: file.name,
-                uploadDateISO: new Date().toISOString(),
-                fileSize: file.size,
-            });
-
-            addToast('success', 'PDF yüklendi');
-        } catch (error) {
-            console.error('Upload failed:', error);
-            addToast('error', 'PDF yüklenemedi');
+                title: eventForm.title,
+                dateISO: eventForm.dateISO,
+                description: eventForm.description || undefined,
+                color: eventForm.color || undefined,
+            })
         }
 
-        e.target.value = '';
-    };
+        setEventModalOpen(false)
+        setEditingEvent(null)
+    }
 
-    const handleOpenPdf = async (noteId: string) => {
-        try {
-            const note = await getLectureNote(noteId);
-            if (!note) {
-                addToast('error', 'PDF bulunamadı');
-                return;
-            }
+    const openEditCourse = () => {
+        setCourseForm({
+            title: course.title,
+            code: course.code ?? '',
+            color: course.color ?? '#6366f1',
+        })
+        setIsEditCourseOpen(true)
+    }
 
-            const blob = new Blob([note.data], { type: note.mimeType });
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-        } catch (error) {
-            console.error('Failed to open PDF:', error);
-            addToast('error', 'PDF açılamadı');
-        }
-    };
-
-    const handleDeleteNote = async (noteId: string) => {
-        try {
-            await deleteLectureNote(noteId);
-            deleteLectureNoteMeta(noteId);
-            addToast('success', 'PDF silindi');
-        } catch (error) {
-            console.error('Failed to delete PDF:', error);
-            addToast('error', 'PDF silinemedi');
-        }
-    };
-
-    const openExternalSearch = (text: string, engine: 'google' | 'youtube' | 'chatgpt') => {
-        const encodedText = encodeURIComponent(text);
-        const urls = {
-            google: `https://www.google.com/search?q=${encodedText}`,
-            youtube: `https://www.youtube.com/results?search_query=${encodedText}`,
-            chatgpt: `https://chat.openai.com/?q=${encodedText}`,
-        };
-        window.open(urls[engine], '_blank');
-    };
-
-    const courseNotes = lectureNotesMeta.filter((n) => n.courseId === course.id);
+    const saveCourse = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!courseForm.title.trim()) return
+        updateCourse(course.id, {
+            title: courseForm.title,
+            code: courseForm.code || undefined,
+            color: courseForm.color,
+        })
+        setIsEditCourseOpen(false)
+    }
 
     return (
         <div className="space-y-6 animate-fade-in">
-            {/* Header */}
-            <div className="flex items-start gap-4">
-                <Button variant="ghost" onClick={() => navigate('/courses')}>
-                    <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                        <div
-                            className="w-4 h-4 rounded-full"
-                            style={{ backgroundColor: course.color }}
-                        />
-                        <h1 className="text-2xl font-bold text-primary">{course.title}</h1>
-                        {course.code && (
-                            <Badge variant="outline" color={course.color}>
-                                {course.code}
-                            </Badge>
-                        )}
+            <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                    <IconButton variant="ghost" onClick={() => navigate('/planner/courses')} title="Geri">
+                        <ArrowLeft className="w-5 h-5" />
+                    </IconButton>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <span
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: course.color ?? '#6366f1' }}
+                            />
+                            <h1 className="text-2xl font-bold text-primary">{course.title}</h1>
+                        </div>
+                        {course.code && <p className="text-secondary mt-1">{course.code}</p>}
                     </div>
-                    <div className="flex items-center gap-4 mt-2">
-                        <span className="text-sm text-secondary">
-                            {progress.completed}/{progress.total} görev tamamlandı
-                        </span>
-                        <ProgressBar value={progress.percentage} color={course.color} className="w-32" />
-                        <span className="text-sm font-medium text-primary">{progress.percentage}%</span>
-                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="secondary" onClick={() => openNewEvent('exam')} leftIcon={<Plus className="w-4 h-4" />}>
+                        Sınav / Etkinlik
+                    </Button>
+                    <IconButton variant="secondary" onClick={openEditCourse} title="Dersi düzenle">
+                        <Pencil className="w-4 h-4" />
+                    </IconButton>
                 </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-2 border-b border-default">
-                {(['units', 'exams', 'notes'] as const).map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={cn(
-                            'px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
-                            activeTab === tab
-                                ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
-                                : 'border-transparent text-secondary hover:text-primary'
-                        )}
-                    >
-                        {tab === 'units' && 'Üniteler'}
-                        {tab === 'exams' && `Sınavlar (${course.exams.length})`}
-                        {tab === 'notes' && `Notlar (${courseNotes.length})`}
-                    </button>
-                ))}
+            <div className="grid gap-4 md:grid-cols-3">
+                <Card className="md:col-span-2">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-sm text-secondary">Bir sonraki sınav/etkinliğe</p>
+                            <p className="text-2xl font-bold text-primary">
+                                {nextEvent ? `${nextEvent.daysLeft} gün` : '—'}
+                            </p>
+                            {nextEvent && (
+                                <p className="text-sm text-secondary mt-1">
+                                    {nextEvent.event.type === 'exam' ? 'Sınav' : 'Etkinlik'} • {nextEvent.event.title} • {formatDateDisplay(nextEvent.event.dateISO)}
+                                </p>
+                            )}
+                        </div>
+                        <CalendarDays className="w-10 h-10 text-tertiary" />
+                    </div>
+                </Card>
+
+                <Card>
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-sm text-secondary">Toplam görev</p>
+                            <p className="text-2xl font-bold text-primary">{tasks.length}</p>
+                        </div>
+                        <CheckCircle2 className="w-10 h-10 text-tertiary" />
+                    </div>
+                </Card>
             </div>
 
-            {/* Units Tab */}
-            {activeTab === 'units' && (
-                <div className="space-y-4">
-                    <div className="flex justify-end">
-                        <Button onClick={() => setIsAddUnitOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
-                            Ünite Ekle
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Card>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-primary">Görevler</h2>
+                        <Button size="sm" onClick={openNewTask} leftIcon={<Plus className="w-4 h-4" />}>
+                            Görev Ekle
                         </Button>
                     </div>
 
-                    {course.units.length === 0 ? (
+                    {tasks.length === 0 ? (
                         <EmptyState
-                            icon={<FileText className="w-8 h-8 text-tertiary" />}
-                            title="Henüz ünite yok"
-                            description="Ders içeriğinizi organize etmek için ünite ekleyin"
+                            icon={<CheckCircle2 className="w-8 h-8 text-tertiary" />}
+                            title="Henüz görev yok"
+                            description="Bu derse görev ekleyerek başlayın."
+                            action={<Button onClick={openNewTask} leftIcon={<Plus className="w-4 h-4" />}>İlk Görevi Ekle</Button>}
                         />
                     ) : (
-                        <div className="space-y-3">
-                            {course.units.map((unit) => {
-                                const isExpanded = expandedUnits.has(unit.id);
-                                const completedTasks = unit.tasks.filter((t) =>
-                                    completionState.completedTaskIds.includes(t.id)
-                                ).length;
-
+                        <div className="space-y-2">
+                            {tasks.map(({ task, unit }) => {
+                                const isCompleted = completedTaskIds.includes(task.id)
                                 return (
-                                    <Card key={unit.id} className="overflow-hidden">
-                                        {/* Unit Header */}
-                                        <div
-                                            className="flex items-center gap-3 cursor-pointer"
-                                            onClick={() => toggleUnit(unit.id)}
-                                        >
-                                            {isExpanded ? (
-                                                <ChevronDown className="w-5 h-5 text-secondary" />
-                                            ) : (
-                                                <ChevronRight className="w-5 h-5 text-secondary" />
+                                    <div
+                                        key={task.id}
+                                        className={cn(
+                                            'p-3 rounded-xl border flex items-start gap-3',
+                                            'border-default bg-secondary/20 hover:bg-secondary/30 transition-colors'
+                                        )}
+                                    >
+                                        <button
+                                            onClick={() => toggleTaskCompletion(task.id)}
+                                            className={cn(
+                                                'mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0',
+                                                isCompleted ? 'bg-green-500 border-green-500' : 'border-default'
                                             )}
-                                            <div className="flex-1">
-                                                <h3 className="font-medium text-primary">{unit.title}</h3>
-                                                <p className="text-sm text-secondary">
-                                                    {completedTasks}/{unit.tasks.length} görev
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                                <IconButton
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        setEditingUnit(unit);
-                                                        setUnitForm({ title: unit.title });
-                                                    }}
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </IconButton>
-                                                <IconButton
-                                                    size="sm"
-                                                    variant="danger"
-                                                    onClick={() => setDeleteConfirm({ type: 'unit', id: unit.id })}
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </IconButton>
+                                            aria-label={isCompleted ? 'Tamamlandı' : 'Tamamla'}
+                                        >
+                                            {isCompleted && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                        </button>
+
+                                        <div className="flex-1 min-w-0">
+                                            <p className={cn('font-medium text-primary', isCompleted && 'line-through opacity-60')}>
+                                                {task.text}
+                                            </p>
+                                            <div className="flex flex-wrap gap-2 mt-1 text-xs text-secondary">
+                                                <span>{unit.title}</span>
+                                                {task.dueDateISO && <span>• {formatDateDisplay(task.dueDateISO)}</span>}
+                                                <span className="capitalize">• {task.status}</span>
                                             </div>
                                         </div>
 
-                                        {/* Tasks */}
-                                        <AnimatePresence>
-                                            {isExpanded && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    className="overflow-hidden"
-                                                >
-                                                    <div className="pt-4 mt-4 border-t border-default space-y-2">
-                                                        {unit.tasks.map((task) => {
-                                                            const isCompleted = completionState.completedTaskIds.includes(
-                                                                task.id
-                                                            );
-
-                                                            return (
-                                                                <div
-                                                                    key={task.id}
-                                                                    className={cn(
-                                                                        'flex items-start gap-3 p-3 rounded-lg transition-colors',
-                                                                        isCompleted ? 'bg-green-500/5' : 'bg-secondary'
-                                                                    )}
-                                                                >
-                                                                    <button
-                                                                        onClick={() => toggleTaskCompletion(task.id)}
-                                                                        className="mt-0.5 flex-shrink-0"
-                                                                    >
-                                                                        {isCompleted ? (
-                                                                            <CheckCircle className="w-5 h-5 text-green-500" />
-                                                                        ) : (
-                                                                            <Circle className="w-5 h-5 text-secondary" />
-                                                                        )}
-                                                                    </button>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <p
-                                                                            className={cn(
-                                                                                'text-sm',
-                                                                                isCompleted
-                                                                                    ? 'line-through text-secondary'
-                                                                                    : 'text-primary'
-                                                                            )}
-                                                                        >
-                                                                            {task.text}
-                                                                        </p>
-                                                                        <div className="flex items-center gap-2 mt-1">
-                                                                            {task.isPriority && (
-                                                                                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                                                                            )}
-                                                                            {task.dueDateISO && (
-                                                                                <span className="text-xs text-secondary flex items-center gap-1">
-                                                                                    <Clock className="w-3 h-3" />
-                                                                                    {formatDateDisplay(task.dueDateISO)}
-                                                                                </span>
-                                                                            )}
-                                                                            <Badge
-                                                                                size="sm"
-                                                                                color={statusColors[task.status]}
-                                                                            >
-                                                                                {statusLabels[task.status]}
-                                                                            </Badge>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-1">
-                                                                        <IconButton
-                                                                            size="sm"
-                                                                            title="Google'da Ara"
-                                                                            onClick={() => openExternalSearch(task.text, 'google')}
-                                                                        >
-                                                                            <SearchIcon className="w-3 h-3" />
-                                                                        </IconButton>
-                                                                        <IconButton
-                                                                            size="sm"
-                                                                            title="YouTube'da Ara"
-                                                                            onClick={() => openExternalSearch(task.text, 'youtube')}
-                                                                        >
-                                                                            <Youtube className="w-3 h-3" />
-                                                                        </IconButton>
-                                                                        <IconButton
-                                                                            size="sm"
-                                                                            title="ChatGPT'de Sor"
-                                                                            onClick={() => openExternalSearch(task.text, 'chatgpt')}
-                                                                        >
-                                                                            <MessageSquare className="w-3 h-3" />
-                                                                        </IconButton>
-                                                                        <IconButton
-                                                                            size="sm"
-                                                                            onClick={() =>
-                                                                                setEditingTask({ task, unitId: unit.id })
-                                                                            }
-                                                                        >
-                                                                            <Edit2 className="w-3 h-3" />
-                                                                        </IconButton>
-                                                                        <IconButton
-                                                                            size="sm"
-                                                                            variant="danger"
-                                                                            onClick={() =>
-                                                                                setDeleteConfirm({
-                                                                                    type: 'task',
-                                                                                    id: task.id,
-                                                                                    parentId: unit.id,
-                                                                                })
-                                                                            }
-                                                                        >
-                                                                            <Trash2 className="w-3 h-3" />
-                                                                        </IconButton>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="w-full"
-                                                            onClick={() => setIsAddTaskOpen(unit.id)}
-                                                            leftIcon={<Plus className="w-4 h-4" />}
-                                                        >
-                                                            Görev Ekle
-                                                        </Button>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </Card>
-                                );
+                                        <div className="flex items-center gap-1">
+                                            <IconButton size="sm" onClick={() => openEditTask(task, unit.id)} title="Düzenle">
+                                                <Pencil className="w-4 h-4" />
+                                            </IconButton>
+                                            <IconButton
+                                                size="sm"
+                                                variant="danger"
+                                                onClick={() => deleteTask(course.id, unit.id, task.id)}
+                                                title="Sil"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </IconButton>
+                                        </div>
+                                    </div>
+                                )
                             })}
                         </div>
                     )}
-                </div>
-            )}
+                </Card>
 
-            {/* Exams Tab */}
-            {activeTab === 'exams' && (
-                <div className="space-y-4">
-                    <div className="flex justify-end">
-                        <Button onClick={() => setIsAddExamOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
-                            Sınav Ekle
+                <Card>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-primary">Takvim</h2>
+                        <Button size="sm" onClick={() => openNewEvent('event')} leftIcon={<Plus className="w-4 h-4" />}>
+                            Etkinlik Ekle
                         </Button>
                     </div>
 
-                    {course.exams.length === 0 ? (
+                    {courseEvents.length === 0 ? (
                         <EmptyState
-                            icon={<Calendar className="w-8 h-8 text-tertiary" />}
-                            title="Henüz sınav yok"
-                            description="Sınav tarihlerinizi ekleyerek geri sayımı başlatın"
+                            icon={<CalendarDays className="w-8 h-8 text-tertiary" />}
+                            title="Henüz etkinlik/sınav yok"
+                            description="Bu ders için sınav veya etkinlik ekleyin."
+                            action={<Button onClick={() => openNewEvent('exam')} leftIcon={<Plus className="w-4 h-4" />}>İlk Sınavı Ekle</Button>}
                         />
                     ) : (
-                        <div className="grid sm:grid-cols-2 gap-4">
-                            {course.exams
-                                .sort((a, b) => new Date(a.examDateISO).getTime() - new Date(b.examDateISO).getTime())
-                                .map((exam) => {
-                                    const daysLeft = getDaysUntil(exam.examDateISO);
-                                    const isPast = daysLeft < 0;
-
-                                    return (
-                                        <Card
-                                            key={exam.id}
-                                            className={cn(
-                                                isPast && 'opacity-60',
-                                                daysLeft <= 3 && !isPast && 'border-red-500',
-                                                daysLeft <= 7 && daysLeft > 3 && 'border-orange-500'
-                                            )}
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <h3 className="font-semibold text-primary">{exam.title}</h3>
-                                                    <p className="text-sm text-secondary mt-1">
-                                                        {formatDateDisplay(exam.examDateISO)}
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <IconButton
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            setEditingExam(exam);
-                                                            setExamForm({
-                                                                title: exam.title,
-                                                                examDateISO: exam.examDateISO,
-                                                                description: exam.description || '',
-                                                            });
-                                                            setIsAddExamOpen(true);
-                                                        }}
-                                                    >
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="sm"
-                                                        variant="danger"
-                                                        onClick={() => setDeleteConfirm({ type: 'exam', id: exam.id })}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </IconButton>
-                                                </div>
-                                            </div>
-                                            <div className="mt-4">
-                                                {isPast ? (
-                                                    <Badge color="#94a3b8">Geçti</Badge>
-                                                ) : (
-                                                    <Badge
-                                                        color={daysLeft <= 3 ? '#ef4444' : daysLeft <= 7 ? '#f97316' : '#6366f1'}
-                                                    >
-                                                        {daysLeft} gün kaldı
+                        <div className="space-y-2">
+                            {courseEvents.map(event => {
+                                const daysLeft = getDaysUntil(event.dateISO)
+                                const isPast = daysLeft < 0
+                                const badgeColor = event.type === 'exam' ? '#f97316' : '#6366f1'
+                                return (
+                                    <div
+                                        key={event.id}
+                                        className={cn(
+                                            'p-3 rounded-xl border flex items-start gap-3',
+                                            'border-default bg-secondary/20 hover:bg-secondary/30 transition-colors'
+                                        )}
+                                    >
+                                        <div
+                                            className="w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0"
+                                            style={{ backgroundColor: event.color ?? badgeColor }}
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-primary truncate">{event.title}</p>
+                                            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-secondary">
+                                                <span>{event.type === 'exam' ? 'Sınav' : 'Etkinlik'}</span>
+                                                <span>• {formatDateDisplay(event.dateISO)}</span>
+                                                {!isPast && (
+                                                    <Badge color={badgeColor}>
+                                                        {daysLeft} gün
                                                     </Badge>
                                                 )}
+                                                {isPast && <span className="text-tertiary">Geçti</span>}
                                             </div>
-                                        </Card>
-                                    );
-                                })}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Notes Tab */}
-            {activeTab === 'notes' && (
-                <div className="space-y-4">
-                    <div className="flex justify-end">
-                        <label className="cursor-pointer">
-                            <span className="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 px-4 py-2 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-2">
-                                <Upload className="w-4 h-4" />
-                                PDF Yükle
-                            </span>
-                            <input
-                                type="file"
-                                accept=".pdf"
-                                onChange={handleFileUpload}
-                                className="hidden"
-                            />
-                        </label>
-                    </div>
-
-                    {courseNotes.length === 0 ? (
-                        <EmptyState
-                            icon={<FileText className="w-8 h-8 text-tertiary" />}
-                            title="Henüz not yok"
-                            description="Ders notlarınızı PDF olarak yükleyin"
-                        />
-                    ) : (
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {courseNotes.map((note) => (
-                                <Card key={note.id} className="group">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 rounded-lg bg-red-500/10">
-                                            <FileText className="w-5 h-5 text-red-500" />
+                                            {event.description && (
+                                                <p className="text-sm text-secondary mt-2 line-clamp-2">{event.description}</p>
+                                            )}
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-medium text-primary truncate">{note.name}</h3>
-                                            <p className="text-sm text-secondary">
-                                                {formatDateDisplay(note.uploadDateISO)}
-                                            </p>
+                                        <div className="flex items-center gap-1">
+                                            <IconButton size="sm" onClick={() => openEditEvent(event)} title="Düzenle">
+                                                <Pencil className="w-4 h-4" />
+                                            </IconButton>
+                                            <IconButton size="sm" variant="danger" onClick={() => deleteEvent(event.id)} title="Sil">
+                                                <Trash2 className="w-4 h-4" />
+                                            </IconButton>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 mt-4">
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            className="flex-1"
-                                            onClick={() => handleOpenPdf(note.id)}
-                                            leftIcon={<ExternalLink className="w-4 h-4" />}
-                                        >
-                                            Aç
-                                        </Button>
-                                        <IconButton
-                                            variant="danger"
-                                            size="sm"
-                                            onClick={() => handleDeleteNote(note.id)}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </IconButton>
-                                    </div>
-                                </Card>
-                            ))}
+                                )
+                            })}
                         </div>
                     )}
-                </div>
-            )}
+                </Card>
+            </div>
 
-            {/* Add/Edit Unit Modal */}
+            {/* Edit Course Modal */}
             <Modal
-                isOpen={isAddUnitOpen || !!editingUnit}
-                onClose={() => {
-                    setIsAddUnitOpen(false);
-                    setEditingUnit(null);
-                    setUnitForm({ title: '' });
-                }}
-                title={editingUnit ? 'Ünite Düzenle' : 'Yeni Ünite'}
+                isOpen={isEditCourseOpen}
+                onClose={() => setIsEditCourseOpen(false)}
+                title="Dersi Düzenle"
             >
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        if (editingUnit) {
-                            updateUnit(course.id, editingUnit.id, { title: unitForm.title });
-                            addToast('success', 'Ünite güncellendi');
-                            setEditingUnit(null);
-                        } else {
-                            handleAddUnit(e);
-                        }
-                        setUnitForm({ title: '' });
-                    }}
-                    className="space-y-4"
-                >
+                <form onSubmit={saveCourse} className="space-y-4">
                     <Input
-                        label="Ünite Adı"
-                        placeholder="örn: Bölüm 1 - Giriş"
-                        value={unitForm.title}
-                        onChange={(e) => setUnitForm({ title: e.target.value })}
+                        label="Ders Adı"
+                        value={courseForm.title}
+                        onChange={(e) => setCourseForm(prev => ({ ...prev, title: e.target.value }))}
                         autoFocus
                     />
-                    <div className="flex justify-end gap-3">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => {
-                                setIsAddUnitOpen(false);
-                                setEditingUnit(null);
-                            }}
-                        >
+                    <Input
+                        label="Ders Kodu (opsiyonel)"
+                        value={courseForm.code}
+                        onChange={(e) => setCourseForm(prev => ({ ...prev, code: e.target.value }))}
+                    />
+                    <Input
+                        label="Renk"
+                        type="color"
+                        value={courseForm.color}
+                        onChange={(e) => setCourseForm(prev => ({ ...prev, color: e.target.value }))}
+                    />
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="secondary" onClick={() => setIsEditCourseOpen(false)}>
                             İptal
                         </Button>
-                        <Button type="submit">{editingUnit ? 'Güncelle' : 'Ekle'}</Button>
+                        <Button type="submit">Kaydet</Button>
                     </div>
                 </form>
             </Modal>
 
-            {/* Add Task Modal */}
+            {/* Add/Edit Task Modal */}
             <Modal
-                isOpen={!!isAddTaskOpen}
+                isOpen={taskModalOpen}
                 onClose={() => {
-                    setIsAddTaskOpen(null);
-                    setTaskForm({ text: '', status: 'todo', isPriority: false, dueDateISO: '', note: '' });
+                    setTaskModalOpen(false)
+                    setEditingTask(null)
                 }}
-                title="Yeni Görev"
+                title={editingTask ? 'Görev Düzenle' : 'Yeni Görev'}
             >
-                <form onSubmit={handleAddTask} className="space-y-4">
+                <form onSubmit={saveTask} className="space-y-4">
                     <Input
                         label="Görev"
-                        placeholder="Görev açıklaması..."
                         value={taskForm.text}
-                        onChange={(e) => setTaskForm({ ...taskForm, text: e.target.value })}
+                        onChange={(e) => setTaskForm(prev => ({ ...prev, text: e.target.value }))}
                         autoFocus
                     />
-                    <div className="grid grid-cols-2 gap-4">
-                        <Select
-                            label="Durum"
-                            value={taskForm.status}
-                            onChange={(e) => setTaskForm({ ...taskForm, status: e.target.value as TaskStatus })}
-                            options={Object.entries(statusLabels).map(([value, label]) => ({ value, label }))}
-                        />
-                        <Input
-                            type="date"
-                            label="Bitiş Tarihi"
-                            value={taskForm.dueDateISO}
-                            onChange={(e) => setTaskForm({ ...taskForm, dueDateISO: e.target.value })}
-                        />
-                    </div>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={taskForm.isPriority}
-                            onChange={(e) => setTaskForm({ ...taskForm, isPriority: e.target.checked })}
-                            className="w-4 h-4 rounded border-default text-[var(--color-accent)]"
-                        />
-                        <span className="text-secondary">Öncelikli</span>
-                    </label>
-                    <Textarea
-                        label="Not (Opsiyonel)"
-                        placeholder="Ek notlar..."
-                        value={taskForm.note}
-                        onChange={(e) => setTaskForm({ ...taskForm, note: e.target.value })}
-                        rows={3}
+                    <Select
+                        label="Durum"
+                        value={taskForm.status}
+                        onChange={(e) => setTaskForm(prev => ({ ...prev, status: e.target.value as TaskStatus }))}
+                        options={[
+                            { value: 'todo', label: 'Yapılacak' },
+                            { value: 'in-progress', label: 'Devam Ediyor' },
+                            { value: 'review', label: 'İnceleme' },
+                            { value: 'done', label: 'Tamamlandı' },
+                        ]}
                     />
-                    <div className="flex justify-end gap-3">
-                        <Button type="button" variant="secondary" onClick={() => setIsAddTaskOpen(null)}>
-                            İptal
-                        </Button>
-                        <Button type="submit">Ekle</Button>
-                    </div>
-                </form>
-            </Modal>
-
-            {/* Add/Edit Exam Modal */}
-            <Modal
-                isOpen={isAddExamOpen}
-                onClose={() => {
-                    setIsAddExamOpen(false);
-                    setEditingExam(null);
-                    setExamForm({ title: '', examDateISO: '', description: '' });
-                }}
-                title={editingExam ? 'Sınav Düzenle' : 'Yeni Sınav'}
-            >
-                <form onSubmit={handleAddExam} className="space-y-4">
-                    <Input
-                        label="Sınav Adı"
-                        placeholder="örn: Vize Sınavı"
-                        value={examForm.title}
-                        onChange={(e) => setExamForm({ ...examForm, title: e.target.value })}
-                        autoFocus
+                    <Select
+                        label="Ünite"
+                        value={taskForm.unitId}
+                        onChange={(e) => setTaskForm(prev => ({ ...prev, unitId: e.target.value }))}
+                        options={unitOptions.length > 0 ? unitOptions : [{ value: '', label: 'Genel' }]}
                     />
                     <Input
+                        label="Bitiş Tarihi (opsiyonel)"
                         type="date"
-                        label="Sınav Tarihi"
-                        value={examForm.examDateISO}
-                        onChange={(e) => setExamForm({ ...examForm, examDateISO: e.target.value })}
+                        value={taskForm.dueDateISO}
+                        onChange={(e) => setTaskForm(prev => ({ ...prev, dueDateISO: e.target.value }))}
                     />
                     <Textarea
-                        label="Açıklama (Opsiyonel)"
-                        placeholder="Sınav hakkında notlar..."
-                        value={examForm.description}
-                        onChange={(e) => setExamForm({ ...examForm, description: e.target.value })}
+                        label="Not (opsiyonel)"
+                        value={taskForm.note}
+                        onChange={(e) => setTaskForm(prev => ({ ...prev, note: e.target.value }))}
                         rows={3}
                     />
-                    <div className="flex justify-end gap-3">
-                        <Button type="button" variant="secondary" onClick={() => setIsAddExamOpen(false)}>
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="secondary" onClick={() => setTaskModalOpen(false)}>
                             İptal
                         </Button>
-                        <Button type="submit">{editingExam ? 'Güncelle' : 'Ekle'}</Button>
+                        <Button type="submit">{editingTask ? 'Güncelle' : 'Ekle'}</Button>
                     </div>
                 </form>
             </Modal>
 
-            {/* Delete Confirmation */}
+            {/* Add/Edit Event Modal */}
             <Modal
-                isOpen={!!deleteConfirm}
-                onClose={() => setDeleteConfirm(null)}
-                title="Silme Onayı"
-                size="sm"
+                isOpen={eventModalOpen}
+                onClose={() => {
+                    setEventModalOpen(false)
+                    setEditingEvent(null)
+                }}
+                title={editingEvent ? 'Etkinlik / Sınav Düzenle' : 'Etkinlik / Sınav Ekle'}
             >
-                <p className="text-secondary mb-6">
-                    Bu öğeyi silmek istediğinize emin misiniz?
-                </p>
-                <div className="flex justify-end gap-3">
-                    <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
-                        İptal
-                    </Button>
-                    <Button variant="danger" onClick={handleDelete}>
-                        Sil
-                    </Button>
-                </div>
+                <form onSubmit={saveEvent} className="space-y-4">
+                    <Select
+                        label="Tip"
+                        value={eventForm.type}
+                        onChange={(e) => setEventForm(prev => ({ ...prev, type: e.target.value as PlannerEventType }))}
+                        options={[
+                            { value: 'event', label: 'Etkinlik' },
+                            { value: 'exam', label: 'Sınav' },
+                        ]}
+                    />
+                    <Input
+                        label="Başlık"
+                        value={eventForm.title}
+                        onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
+                        autoFocus={!editingEvent}
+                    />
+                    <Input
+                        label="Tarih"
+                        type="date"
+                        value={eventForm.dateISO}
+                        onChange={(e) => setEventForm(prev => ({ ...prev, dateISO: e.target.value }))}
+                    />
+                    <Input
+                        label="Renk"
+                        type="color"
+                        value={eventForm.color}
+                        onChange={(e) => setEventForm(prev => ({ ...prev, color: e.target.value }))}
+                    />
+                    <Textarea
+                        label="Açıklama (opsiyonel)"
+                        value={eventForm.description}
+                        onChange={(e) => setEventForm(prev => ({ ...prev, description: e.target.value }))}
+                        rows={3}
+                    />
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="secondary" onClick={() => setEventModalOpen(false)}>
+                            İptal
+                        </Button>
+                        <Button type="submit">{editingEvent ? 'Güncelle' : 'Ekle'}</Button>
+                    </div>
+                </form>
             </Modal>
         </div>
-    );
+    )
 }

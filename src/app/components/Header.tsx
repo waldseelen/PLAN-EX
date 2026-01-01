@@ -1,4 +1,5 @@
-import { usePlannerStats, usePlannerStore } from '@/modules/planner/store'
+import { usePlannerStore } from '@/modules/planner/store'
+import type { Task } from '@/modules/planner/types'
 import { Bell, Calendar, Clock, Plus, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
@@ -23,11 +24,10 @@ export function Header({
 
     const courses = usePlannerStore(state => state.courses)
     const completionState = usePlannerStore(state => state.completionState)
-    const { totalTasks, completedTasks } = usePlannerStats()
 
     // Calculate upcoming deadlines (next 3 days)
     const upcomingDeadlines = useMemo(() => {
-        const deadlines: { task: any; courseCode: string; daysLeft: number }[] = []
+        const deadlines: { task: Task; courseCode: string; daysLeft: number }[] = []
         const today = new Date()
         today.setHours(0, 0, 0, 0)
 
@@ -43,7 +43,7 @@ export function Header({
 
                         if (diffDays >= 0 && diffDays <= 3) {
                             deadlines.push({
-                                task: { ...task, dueDate: taskDueDate },
+                                task,
                                 courseCode: course.code || course.title.slice(0, 6).toUpperCase(),
                                 daysLeft: diffDays,
                             })
@@ -71,7 +71,7 @@ export function Header({
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-wrap items-center gap-4 justify-between">
                         <div className="flex items-center gap-3">
-                            <NavLink to="/" className="flex-shrink-0">
+                            <NavLink to="/planner" className="flex-shrink-0">
                                 <img
                                     src="/logo.png"
                                     alt="Plan.Ex Logo"
@@ -147,7 +147,7 @@ export function Header({
                                                             <div className="flex items-center gap-1 mt-1 text-xs text-slate-500">
                                                                 <Clock size={12} />
                                                                 <span>
-                                                                    {new Date(item.task.dueDate!).toLocaleDateString('tr-TR')}
+                                                                    {new Date(item.task.dueDateISO!).toLocaleDateString('tr-TR')}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -173,7 +173,7 @@ export function Header({
                             </button>
 
                             <button
-                                onClick={onNewTask || (() => navigate('/tasks'))}
+                                onClick={onNewTask || (() => navigate('/planner/tasks'))}
                                 className="btn-cta-outline hidden sm:flex items-center gap-2 text-sm font-semibold"
                             >
                                 <Plus size={18} />
@@ -209,7 +209,7 @@ export function Header({
 
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={onNewTask || (() => navigate('/tasks'))}
+                                onClick={onNewTask || (() => navigate('/planner/tasks'))}
                                 className="px-4 py-2.5 bg-gradient-to-r from-[#00aeef] via-[#29c6cd] to-[#00d9ff] text-[#0b0b0b] rounded-xl font-bold text-sm shadow-glow-sm hover:brightness-110 transition-all flex items-center gap-2"
                             >
                                 <Plus size={18} />

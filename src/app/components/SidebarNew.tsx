@@ -26,7 +26,7 @@ export function Sidebar({ collapsed = false, onToggleCollapse }: SidebarProps) {
         >
             {/* Logo */}
             <NavLink
-                to="/"
+                to="/planner"
                 className="w-10 h-10 rounded-xl mb-6 shadow-lg shadow-[rgba(0,174,239,0.35)] cursor-pointer hover:scale-105 transition-transform overflow-hidden"
             >
                 <img
@@ -39,19 +39,19 @@ export function Sidebar({ collapsed = false, onToggleCollapse }: SidebarProps) {
             {/* Navigation */}
             <nav className="flex flex-col gap-1 flex-1 w-full px-2">
                 <NavItem
-                    to="/"
+                    to="/planner"
                     icon={<LayoutDashboard size={20} />}
                     label="Overview"
                     collapsed={collapsed}
                 />
                 <NavItem
-                    to="/tasks"
+                    to="/planner/tasks"
                     icon={<Inbox size={20} />}
                     label="Görevler"
                     collapsed={collapsed}
                 />
                 <NavItem
-                    to="/courses"
+                    to="/planner/courses"
                     icon={<FolderOpen size={20} />}
                     label="Dersler"
                     collapsed={collapsed}
@@ -69,13 +69,13 @@ export function Sidebar({ collapsed = false, onToggleCollapse }: SidebarProps) {
                     collapsed={collapsed}
                 />
                 <NavItem
-                    to="/productivity"
+                    to="/planner/productivity"
                     icon={<Clock size={20} />}
                     label="Pomodoro"
                     collapsed={collapsed}
                 />
                 <NavItem
-                    to="/statistics"
+                    to="/planner/statistics"
                     icon={<BarChart2 size={20} />}
                     label="İstatistik"
                     collapsed={collapsed}
@@ -123,7 +123,7 @@ interface NavItemProps {
     collapsed?: boolean
 }
 
-const NavItem = ({ to, icon, label, collapsed }: NavItemProps) => (
+const NavItem = ({ to, icon, label, collapsed: _collapsed }: NavItemProps) => (
     <NavLink
         to={to}
         end={to === '/'}
