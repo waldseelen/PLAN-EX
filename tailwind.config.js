@@ -122,6 +122,7 @@ export default {
             },
             animation: {
                 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
                 'spin-slow': 'spin 3s linear infinite',
                 'breathe': 'breathe 3s ease-in-out infinite',
                 'slide-up': 'slideUp 0.3s ease-out',
@@ -130,6 +131,8 @@ export default {
                 'scale-in': 'scaleIn 0.2s ease-out',
                 'bounce-in': 'bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                 'check': 'check 0.3s ease-out forwards',
+                'confetti': 'confetti 0.8s ease-out forwards',
+                'bounce-small': 'bounceSmall 0.3s ease-out',
             },
             keyframes: {
                 breathe: {
@@ -157,10 +160,24 @@ export default {
                     '50%': { transform: 'scale(1.1)' },
                     '100%': { transform: 'scale(1)', opacity: '1' },
                 },
+                bounceSmall: {
+                    '0%, 100%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.1)' },
+                },
                 check: {
                     '0%': { transform: 'scale(0)' },
                     '50%': { transform: 'scale(1.2)' },
                     '100%': { transform: 'scale(1)' },
+                },
+                confetti: {
+                    '0%': {
+                        transform: 'translateY(-10px) rotate(0deg)',
+                        opacity: '1'
+                    },
+                    '100%': {
+                        transform: 'translateY(100vh) rotate(720deg)',
+                        opacity: '0'
+                    },
                 },
             },
             boxShadow: {

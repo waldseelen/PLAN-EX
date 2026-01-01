@@ -1,4 +1,4 @@
-import { GlobalErrorBoundary, PageErrorBoundary, PrivacyProvider } from '@/shared/components'
+import { GlobalErrorBoundary, PageErrorBoundary, PrivacyProvider, ToastProvider } from '@/shared/components'
 import { Suspense, lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './layouts/AppLayout'
@@ -32,89 +32,91 @@ export function App() {
         <GlobalErrorBoundary>
             <ThemeProvider>
                 <PrivacyProvider>
-                    <BrowserRouter>
-                        <Routes>
-                            <Route path="/" element={<AppLayout />}>
-                                <Route index element={<Navigate to="/planner" replace />} />
+                    <ToastProvider>
+                        <BrowserRouter>
+                            <Routes>
+                                <Route path="/" element={<AppLayout />}>
+                                    <Route index element={<Navigate to="/planner" replace />} />
 
-                                <Route path="planner">
-                                    <Route index element={
-                                        <PageErrorBoundary pageName="Ana Sayfa">
+                                    <Route path="planner">
+                                        <Route index element={
+                                            <PageErrorBoundary pageName="Ana Sayfa">
+                                                <Suspense fallback={<LoadingFallback />}>
+                                                    <LazyDashboard />
+                                                </Suspense>
+                                            </PageErrorBoundary>
+                                        } />
+                                        <Route path="courses" element={
+                                            <PageErrorBoundary pageName="Dersler">
+                                                <Suspense fallback={<LoadingFallback />}>
+                                                    <LazyCourses />
+                                                </Suspense>
+                                            </PageErrorBoundary>
+                                        } />
+                                        <Route path="courses/:courseId" element={
+                                            <PageErrorBoundary pageName="Ders Detay">
+                                                <Suspense fallback={<LoadingFallback />}>
+                                                    <LazyCourseDetail />
+                                                </Suspense>
+                                            </PageErrorBoundary>
+                                        } />
+                                        <Route path="tasks" element={
+                                            <PageErrorBoundary pageName="Görevler">
+                                                <Suspense fallback={<LoadingFallback />}>
+                                                    <LazyTasks />
+                                                </Suspense>
+                                            </PageErrorBoundary>
+                                        } />
+                                        <Route path="productivity" element={
+                                            <PageErrorBoundary pageName="Pomodoro">
+                                                <Suspense fallback={<LoadingFallback />}>
+                                                    <LazyProductivity />
+                                                </Suspense>
+                                            </PageErrorBoundary>
+                                        } />
+                                        <Route path="statistics" element={
+                                            <PageErrorBoundary pageName="İstatistikler">
+                                                <Suspense fallback={<LoadingFallback />}>
+                                                    <LazyStatistics />
+                                                </Suspense>
+                                            </PageErrorBoundary>
+                                        } />
+                                    </Route>
+                                    <Route path="calendar" element={
+                                        <PageErrorBoundary pageName="Takvim">
                                             <Suspense fallback={<LoadingFallback />}>
-                                                <LazyDashboard />
+                                                <LazyCalendar />
                                             </Suspense>
                                         </PageErrorBoundary>
                                     } />
-                                    <Route path="courses" element={
-                                        <PageErrorBoundary pageName="Dersler">
+                                    <Route path="tasks" element={<Navigate to="/planner/tasks" replace />} />
+                                    <Route path="habits" element={
+                                        <PageErrorBoundary pageName="Alışkanlıklar">
                                             <Suspense fallback={<LoadingFallback />}>
-                                                <LazyCourses />
+                                                <LazyHabits />
                                             </Suspense>
                                         </PageErrorBoundary>
                                     } />
-                                    <Route path="courses/:courseId" element={
-                                        <PageErrorBoundary pageName="Ders Detay">
+                                    <Route path="habits/:habitId" element={
+                                        <PageErrorBoundary pageName="Alışkanlık Detay">
                                             <Suspense fallback={<LoadingFallback />}>
-                                                <LazyCourseDetail />
+                                                <LazyHabitDetail />
                                             </Suspense>
                                         </PageErrorBoundary>
                                     } />
-                                    <Route path="tasks" element={
-                                        <PageErrorBoundary pageName="Görevler">
+                                    <Route path="productivity" element={<Navigate to="/planner/productivity" replace />} />
+                                    <Route path="statistics" element={<Navigate to="/planner/statistics" replace />} />
+                                    <Route path="settings" element={
+                                        <PageErrorBoundary pageName="Ayarlar">
                                             <Suspense fallback={<LoadingFallback />}>
-                                                <LazyTasks />
-                                            </Suspense>
-                                        </PageErrorBoundary>
-                                    } />
-                                    <Route path="productivity" element={
-                                        <PageErrorBoundary pageName="Pomodoro">
-                                            <Suspense fallback={<LoadingFallback />}>
-                                                <LazyProductivity />
-                                            </Suspense>
-                                        </PageErrorBoundary>
-                                    } />
-                                    <Route path="statistics" element={
-                                        <PageErrorBoundary pageName="İstatistikler">
-                                            <Suspense fallback={<LoadingFallback />}>
-                                                <LazyStatistics />
+                                                <LazySettings />
                                             </Suspense>
                                         </PageErrorBoundary>
                                     } />
                                 </Route>
-                                <Route path="calendar" element={
-                                    <PageErrorBoundary pageName="Takvim">
-                                        <Suspense fallback={<LoadingFallback />}>
-                                            <LazyCalendar />
-                                        </Suspense>
-                                    </PageErrorBoundary>
-                                } />
-                                <Route path="tasks" element={<Navigate to="/planner/tasks" replace />} />
-                                <Route path="habits" element={
-                                    <PageErrorBoundary pageName="Alışkanlıklar">
-                                        <Suspense fallback={<LoadingFallback />}>
-                                            <LazyHabits />
-                                        </Suspense>
-                                    </PageErrorBoundary>
-                                } />
-                                <Route path="habits/:habitId" element={
-                                    <PageErrorBoundary pageName="Alışkanlık Detay">
-                                        <Suspense fallback={<LoadingFallback />}>
-                                            <LazyHabitDetail />
-                                        </Suspense>
-                                    </PageErrorBoundary>
-                                } />
-                                <Route path="productivity" element={<Navigate to="/planner/productivity" replace />} />
-                                <Route path="statistics" element={<Navigate to="/planner/statistics" replace />} />
-                                <Route path="settings" element={
-                                    <PageErrorBoundary pageName="Ayarlar">
-                                        <Suspense fallback={<LoadingFallback />}>
-                                            <LazySettings />
-                                        </Suspense>
-                                    </PageErrorBoundary>
-                                } />
-                            </Route>
-                        </Routes>
-                    </BrowserRouter>
+                            </Routes>
+                        </BrowserRouter>
+                    </ToastProvider>
                 </PrivacyProvider>
             </ThemeProvider>
         </GlobalErrorBoundary>

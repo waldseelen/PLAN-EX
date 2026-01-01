@@ -11,31 +11,94 @@ Plan.Ex; dersler (course), görevler (task), sınav/etkinlikler (event/exam) ve 
 
 ---
 
-## Özellikler (çalışan)
+## ✔ Çalışan Özellikler
 
-### Planner (Courses / Tasks / Events)
-- Ders oluşturma/düzenleme (ad, kod, renk)
-- Ders detayında: ders bilgisi + “kalan gün” (en yakın sınav/etkinliğe)
-- Derse bağlı görevler: listeleme + tamamlama + düzenleme + silme
-- Derse bağlı sınav/etkinlikler: oluşturma + düzenleme + silme
+### 1) Ders Yönetimi
+- ✅ Çoklu ders oluşturma (sınırsız)
+- ✅ Ders → Ünite → Görev hiyerarşisi
+- ✅ 9 renk paleti ile ders renklendirme
+- ✅ Ders bazlı % ilerleme hesabı
+- ✅ Görevler için drag & drop sıralama
 
-### Takvim
-- Ay görünümü + gün bazlı etkinlik sayıları
-- Yaklaşan sınavlar listesi + kalan gün badge’leri
-- Etkinlik/sınav oluşturma + düzenleme + silme
-- Ders ile ilişkilendirme (`event.courseId`)
+### 2) PDF Ders Notları
+- ✅ Ders başına sınırsız PDF yükleme
+- ✅ IndexedDB ile dosya saklama (large blob, max 50MB)
+- ✅ Upload progress bar
+- ✅ Yeni sekmede açma
+- ✅ İndirme
+- ✅ Drag & drop yükleme
 
-### Habits
-- Alışkanlık oluşturma ve takip ekranları (offline)
+### 3) Sınav Takibi
+- ✅ Midterm / Final tarihleri
+- ✅ Geri sayım (kalan gün)
+- ✅ Renkli uyarı sistemi (🔴 ≤3 gün, 🟠 ≤7 gün)
+- ✅ Ana ekranda "Yaklaşan sınavlar" listesi
+- ✅ Kritik sınav animasyonları (pulse, glow efektleri)
+- ✅ Bugün/Yarın özel etiketleri
 
-### Smart FAB (+)
-- Sağ altta global FAB
-- Tıkla: “Ne oluşturmak istiyorsun?” modalı
-- Seçenekler: Görev / Alışkanlık / Ders / Etkinlik-Sınav
+### 4) Pomodoro Timer
+- ✅ Çalışma / kısa mola / uzun mola ayarları
+- ✅ Oturum sayacı
+- ✅ Otomatik geçiş
+- ✅ Toast bildirimi
+- ✅ Ses bildirim (açma/kapama)
+- ✅ Oturum istatistiklerini kalıcı kaydetme
 
-### Ayarlar
-- Tema (light/dark/system)
-- Veri yedekleme (Export/Import) — IndexedDB içeriği için
+### 5) İstatistikler
+- ✅ Son 7 gün görev/alışkanlık tamamlama grafiği
+- ✅ Haftalık aktivite özeti
+- ✅ Genel ilerleme yüzdesi
+- ✅ Pomodoro istatistikleri (günlük/toplam)
+
+### 6) Takvim Görünümü
+- ✅ Aylık takvim
+- ✅ Ders renkleri
+- ✅ Aylar arası navigasyon
+- ✅ Sınav & event görünümü
+
+### 7) Arama
+- ✅ Header'da görevler ve dersler içinde anlık arama
+- ✅ Debounced input (300ms)
+- ✅ Eşleşen metin vurgulama (highlight)
+- ✅ Sonuç türüne göre kategorilendirme (Ders/Ünite/Görev)
+- ✅ Global Search Box'lar (Google, YouTube, ChatGPT) - Ana sayfada
+- ✅ Task içi arama butonları (Google, YouTube, ChatGPT)
+
+### 8) Tema & Görünüm
+- ✅ Dark / Light / System theme
+- ✅ Smooth transition
+- ✅ Modern glassmorphism tasarım
+
+### 9) Veri Yönetimi
+- ✅ LocalStorage ile otomatik persist (Zustand)
+- ✅ IndexedDB (PDF blob'lar için)
+- ✅ JSON export/import
+- ✅ Veri yedekleme
+- ✅ 7 gün yedekleme hatırlatıcısı (otomatik uyarı)
+
+### 10) Klavye Kısayolları
+- ✅ Space: Ana sayfa
+- ✅ N: Yeni kayıt modalı
+- ✅ Ctrl+,: Ayarlar
+- ✅ Ctrl+K: Arama kutusuna odaklan
+- ✅ Ctrl+Z: Geri al (undo)
+- ✅ Esc: Modal kapat
+
+### 11) Responsive Tasarım
+- ✅ Mobile-first
+- ✅ Bottom navigation (mobil)
+- ✅ Sidebar (desktop/tablet)
+- ✅ Touch friendly
+
+### 12) Ekstra Özellikler
+- ✅ Toast system
+- ✅ Quick Add modal (FAB)
+- ✅ Privacy mode
+- ✅ Offline indicator
+- ✅ Error boundary
+- ✅ Görev tamamlama confetti animasyonu
+- ✅ Haptic feedback (mobil)
+- ✅ Completion sound efekti
 
 ---
 
@@ -68,37 +131,96 @@ Varsayılan dev adresi: `http://localhost:3000` (port doluysa Vite otomatik fark
 
 ---
 
-## Route Haritası (canonical)
+## Route Haritası
 
-- `/planner` — Overview
-- `/planner/courses` — Courses list
-- `/planner/courses/:courseId` — Course detail
-- `/planner/tasks` — Personal tasks
-- `/calendar` — Calendar (events/exams)
-- `/habits` — Habits dashboard
-- `/habits/:habitId` — Habit detail
-- `/settings` — Settings
+| Route | Sayfa |
+|-------|-------|
+| `/planner` | Ana sayfa (Overview) |
+| `/planner/courses` | Dersler listesi |
+| `/planner/courses/:courseId` | Ders detay (görevler, sınavlar, PDF notlar) |
+| `/planner/tasks` | Kişisel görevler |
+| `/planner/productivity` | Pomodoro Timer |
+| `/planner/statistics` | İstatistikler |
+| `/calendar` | Takvim (events/exams) |
+| `/habits` | Alışkanlıklar |
+| `/habits/:habitId` | Alışkanlık detay |
+| `/settings` | Ayarlar |
 
 Not: Legacy yollar `/tasks`, `/productivity`, `/statistics` ilgili `/planner/*` rotalarına yönlendirilir.
 
 ---
 
-## Veri Saklama
+## Klavye Kısayolları
 
-- Planner verileri: Zustand persist + `localStorage` (tek kaynak: planner store; Calendar aynı veriyi kullanır)
-- Settings ve bazı modüller: IndexedDB (Dexie)
+| Kısayol | Açıklama |
+|---------|----------|
+| `Space` | Ana sayfaya git |
+| `N` | Yeni kayıt modalını aç |
+| `Ctrl + ,` | Ayarlara git |
+| `Ctrl + K` | Arama kutusuna odaklan |
+| `Ctrl + Z` | Son işlemi geri al |
+| `Esc` | Açık modalı kapat |
 
 ---
 
-## Proje Yapısı (özet)
+## Veri Saklama
+
+| Veri Tipi | Depolama |
+|-----------|----------|
+| Planner verileri (courses, tasks, events) | Zustand persist + localStorage |
+| Alışkanlıklar ve loglar | Zustand persist + localStorage |
+| PDF dosyaları | IndexedDB (Dexie) - ayrı DB |
+| Pomodoro oturumları | localStorage (`pomodoroSessions`) |
+| Settings ve diğer modüller | IndexedDB (Dexie) |
+
+---
+
+## Proje Yapısı
 
 ```
 src/
-  app/                # Router + layout
-  modules/
-    planner/          # Courses / Tasks / Calendar / Habits (UI + stores)
-    settings/         # Settings (Dexie export/import dahil)
-  shared/             # Paylaşılan UI, hooks, utilities
-  db/                 # Dexie/IndexedDB şeması
+├── app/                    # Router + layout
+│   ├── components/         # Header, Sidebar, Bottom Nav
+│   ├── layouts/            # AppLayout
+│   └── providers/          # ThemeProvider
+├── modules/
+│   ├── planner/            # Ders, Görev, Takvim modülleri
+│   │   ├── components/     # UI bileşenleri
+│   │   │   ├── features/   # GlobalSearchBoxes, LectureNotes, QuickNotes
+│   │   │   └── ui/         # Button, Card, Input, Modal
+│   │   ├── lib/            # Utils, pdfStorage
+│   │   ├── pages/          # Sayfa bileşenleri
+│   │   ├── store/          # Zustand store
+│   │   └── types/          # TypeScript tipleri
+│   └── settings/           # Ayarlar modülü
+├── shared/                 # Paylaşılan bileşenler
+│   ├── components/         # Toast, Modal, ErrorBoundary
+│   ├── hooks/              # useKeyboardShortcuts, useMediaQuery, useCompletionFeedback
+│   └── utils/              # Yardımcı fonksiyonlar
+└── db/                     # Dexie/IndexedDB şeması
 ```
 
+---
+
+## Son Güncelleme (2026-01-02)
+
+### ➕ Yeni Eklenenler
+- **Gelişmiş Arama**: Header'da debounced arama, eşleşen metin vurgulama, ders/ünite/görev kategorilendirmesi
+- **Drag & Drop**: Görevleri sürükle-bırak ile yeniden sıralama
+- **Confetti Animasyonu**: Görev tamamlandığında kutlama efekti
+- **Completion Sound**: Görev tamamlama ses efekti
+- **Sınav Alarm Animasyonları**: ≤3 gün kalan sınavlar için pulse/glow efektleri
+- **Backup Hatırlatıcı**: 7 gün yedekleme yapılmadığında otomatik uyarı
+- **Pomodoro İstatistik Kaydı**: Oturumlar localStorage'a kalıcı kaydediliyor
+- **Gelişmiş Klavye Kısayolları**: Ctrl+K (ara), Ctrl+Z (geri al), Esc (modal kapat)
+
+### 🧹 Temizlenen/Düzeltilen
+- Button bileşeni type safety düzeltmesi
+- Import optimizasyonları
+- Pomodoro istatistik bağlantısı düzeltildi
+
+### ⏳ Planlanan
+- Syllabus export (Markdown)
+- Daily log export
+- Veri katmanı birleştirme (Zustand → Dexie adapter)
+- Auto-save (30 saniyede bir)

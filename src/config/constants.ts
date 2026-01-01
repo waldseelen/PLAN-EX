@@ -196,7 +196,7 @@ export const DB_CONSTANTS = {
 
 export const NOTIFICATION_CONSTANTS = {
     /** Varsayılan bildirim ikonu */
-    DEFAULT_ICON: '/icons/icon-192.png',
+    DEFAULT_ICON: '/logo.png',
 
     /** Bildirim başlığı */
     DEFAULT_TITLE: 'LifeFlow Bildirimi',

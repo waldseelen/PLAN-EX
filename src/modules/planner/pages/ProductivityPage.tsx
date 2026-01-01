@@ -19,13 +19,41 @@ const modeColors: Record<TimerMode, string> = {
     longBreak: '#3b82f6',
 };
 
+// Pomodoro oturumlarını localStorage'a kaydet/oku
+const POMODORO_SESSIONS_KEY = 'pomodoroSessions';
+
+function getTodayKey(): string {
+    return new Date().toISOString().split('T')[0];
+}
+
+function getPomodoroSessionsFromStorage(): Record<string, number> {
+    try {
+        const stored = localStorage.getItem(POMODORO_SESSIONS_KEY);
+        return stored ? JSON.parse(stored) : {};
+    } catch {
+        return {};
+    }
+}
+
+function savePomodoroSession(): void {
+    const today = getTodayKey();
+    const sessions = getPomodoroSessionsFromStorage();
+    sessions[today] = (sessions[today] || 0) + 1;
+    localStorage.setItem(POMODORO_SESSIONS_KEY, JSON.stringify(sessions));
+}
+
+function getTodaySessions(): number {
+    const sessions = getPomodoroSessionsFromStorage();
+    return sessions[getTodayKey()] || 0;
+}
+
 export function ProductivityPage() {
     const { settings, updateSettings, addToast } = usePlannerApp()
 
     const [mode, setMode] = useState<TimerMode>('work');
     const [isRunning, setIsRunning] = useState(false);
     const [timeLeft, setTimeLeft] = useState(settings.pomodoro.workDuration * 60);
-    const [sessions, setSessions] = useState(0);
+    const [sessions, setSessions] = useState(() => getTodaySessions());
     const [startTime, setStartTime] = useState<number | null>(null);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -73,6 +101,8 @@ export function ProductivityPage() {
 
                     // Handle mode transition
                     if (mode === 'work') {
+                        // Oturumu localStorage'a kaydet
+                        savePomodoroSession();
                         const newSessions = sessions + 1;
                         setSessions(newSessions);
 

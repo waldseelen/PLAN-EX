@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { GlobalSearchBoxes } from '../components/features/GlobalSearchBoxes'
 import { QuickNotes } from '../components/features/QuickNotes'
 import { Button } from '../components/ui/Button'
 import { Badge, Card, CardHeader, ProgressBar, ProgressRing } from '../components/ui/Card'
@@ -116,6 +117,9 @@ export function OverviewPage() {
                     </motion.div>
                 ))}
             </div>
+
+            {/* Global Search Boxes */}
+            <GlobalSearchBoxes />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -236,22 +240,31 @@ export function OverviewPage() {
                                     <div
                                         key={event.id}
                                         className={cn(
-                                            'flex items-center gap-4 p-3 rounded-lg',
-                                            daysLeft <= 3 ? 'bg-red-500/10' : daysLeft <= 7 ? 'bg-orange-500/10' : 'bg-secondary'
+                                            'flex items-center gap-4 p-3 rounded-lg transition-all',
+                                            daysLeft <= 3 ? 'bg-red-500/10 animate-pulse-slow' : daysLeft <= 7 ? 'bg-orange-500/10' : 'bg-secondary',
+                                            daysLeft <= 1 && 'ring-2 ring-red-500/50 shadow-lg shadow-red-500/20'
                                         )}
                                     >
                                         <div
-                                            className="w-3 h-3 rounded-full flex-shrink-0"
+                                            className={cn(
+                                                'w-3 h-3 rounded-full flex-shrink-0',
+                                                daysLeft <= 3 && 'animate-ping-slow'
+                                            )}
                                             style={{ backgroundColor: course.color }}
                                         />
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-primary truncate">{event.title}</p>
+                                            <p className={cn(
+                                                'font-medium text-primary truncate',
+                                                daysLeft <= 1 && 'text-red-400 font-bold'
+                                            )}>
+                                                {event.title}
+                                            </p>
                                             <p className="text-sm text-secondary">{course.title}</p>
                                         </div>
                                         <Badge
                                             color={daysLeft <= 3 ? '#ef4444' : daysLeft <= 7 ? '#f97316' : '#6366f1'}
                                         >
-                                            {daysLeft} gün
+                                            {daysLeft === 0 ? '🔥 BUGÜN' : daysLeft === 1 ? '⚠️ YARIN' : `${daysLeft} gün`}
                                         </Badge>
                                     </div>
                                 ))}

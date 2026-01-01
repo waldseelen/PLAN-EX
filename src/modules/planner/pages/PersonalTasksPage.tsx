@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { ExternalSearchButtons } from '../components/features/ExternalSearchButtons'
 import { Button, IconButton } from '../components/ui/Button'
 import { Badge, Card, EmptyState } from '../components/ui/Card'
 import { Input, Select, Textarea } from '../components/ui/Input'
@@ -238,6 +239,9 @@ export function PersonalTasksPage() {
                                                 </Badge>
                                             </div>
                                         </div>
+
+                                        {/* External Search Buttons */}
+                                        <ExternalSearchButtons title={task.text} description={task.note} />
 
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <IconButton size="sm" onClick={() => openEditModal(task)}>

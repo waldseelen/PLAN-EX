@@ -16,7 +16,7 @@ interface ErrorBoundaryProps {
     /** Alt bileşenler */
     children: ReactNode
     /** Fallback UI (opsiyonel - varsayılan error UI kullanılır) */
-    fallback?: ReactNode | undefined
+    fallback?: ReactNode | ((error: Error) => ReactNode) | undefined
     /** Hata callback'i (logging için) */
     onError?: ((error: Error, errorInfo: ErrorInfo) => void) | undefined
     /** Bileşen adı (hata mesajlarında kullanılır) */
@@ -79,6 +79,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         if (hasError) {
             // Custom fallback varsa onu kullan
             if (fallback) {
+                if (typeof fallback === 'function') {
+                    return fallback(error!)
+                }
                 return fallback
             }
 
@@ -228,7 +231,7 @@ export function GlobalErrorBoundary({ children }: GlobalErrorBoundaryProps) {
     return (
         <ErrorBoundary
             onError={handleError}
-            fallback={
+            fallback={(error) => (
                 <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-surface-50 dark:bg-surface-950">
                     <div className="max-w-md text-center">
                         <div className="w-24 h-24 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-8">
@@ -237,10 +240,17 @@ export function GlobalErrorBoundary({ children }: GlobalErrorBoundaryProps) {
                         <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-100 mb-4">
                             Uygulama Hatası
                         </h1>
-                        <p className="text-surface-600 dark:text-surface-400 mb-8">
-                            Beklenmeyen bir hata oluştu. Lütfen sayfayı yenileyerek tekrar deneyin.
-                            Sorun devam ederse, tarayıcı önbelleğini temizlemeyi deneyin.
+                        <p className="text-surface-600 dark:text-surface-400 mb-2">
+                            Beklenmeyen bir hata oluştu.
                         </p>
+                        <div className="text-xs text-red-600 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg text-left mb-8 overflow-auto max-h-40 font-mono">
+                            <p className="font-bold mb-1">Hata Detayı:</p>
+                            {error.message}
+                            <details className="mt-2">
+                                <summary>Stack Trace</summary>
+                                <pre className="mt-1 whitespace-pre-wrap">{error.stack}</pre>
+                            </details>
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             <button
                                 onClick={() => window.location.reload()}
@@ -263,7 +273,7 @@ export function GlobalErrorBoundary({ children }: GlobalErrorBoundaryProps) {
                         </div>
                     </div>
                 </div>
-            }
+            )}
         >
             {children}
         </ErrorBoundary>

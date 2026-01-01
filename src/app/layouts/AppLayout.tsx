@@ -1,8 +1,10 @@
-import { CreateTypeModal, FocusModeProvider, OfflineIndicator, PrivacyToggle, ScrollToTop, SmartFab, ToastProvider, type CreateType } from '@/shared/components'
+import { usePlannerAppStore } from '@/modules/planner/store/plannerAppStore'
+import { usePlannerStore } from '@/modules/planner/store/plannerStore'
+import { CreateTypeModal, FocusModeProvider, OfflineIndicator, PrivacyToggle, ScrollToTop, SmartFab, useToast, type CreateType } from '@/shared/components'
 import { useDocumentTitle, useDynamicFavicon, useKeyboardShortcuts } from '@/shared/hooks'
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery'
 import { BookOpenIcon, CalendarIcon, CheckCircleIcon, DocumentTextIcon, PlusIcon } from '@heroicons/react/24/outline'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNavigation } from '../components/BottomNavigation'
 import { Header } from '../components/Header'
@@ -18,6 +20,26 @@ export function AppLayout() {
     const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+    const [isSearchFocused, setIsSearchFocused] = useState(false)
+
+    // Backup uyarısı kontrolü
+    const { checkBackupWarning, backupWarning } = usePlannerAppStore()
+    const { showToast } = useToast()
+
+    // App başlangıcında backup uyarısını kontrol et
+    useEffect(() => {
+        checkBackupWarning()
+    }, [checkBackupWarning])
+
+    // Backup uyarısı göster
+    useEffect(() => {
+        if (backupWarning) {
+            showToast('7 günden fazla yedekleme yapılmadı! Ayarlar > Yedekleme\'den verilerinizi yedekleyin.', {
+                variant: 'warning',
+                duration: 8000,
+            })
+        }
+    }, [backupWarning, showToast])
 
     // Dynamic document title
     useDocumentTitle({
@@ -43,11 +65,36 @@ export function AppLayout() {
         navigate('/settings')
     }, [navigate])
 
+    // Arama kutusuna odaklan
+    const handleFocusSearch = useCallback(() => {
+        setIsSearchFocused(true)
+        // Header'daki arama input'una focus ver
+        const searchInput = document.querySelector('input[placeholder*="ara"]') as HTMLInputElement
+        if (searchInput) {
+            searchInput.focus()
+        }
+    }, [])
+
+    // Geri al (undo)
+    const handleUndo = useCallback(() => {
+        const undo = usePlannerStore.getState().undo
+        undo()
+        showToast('Geri alındı', { variant: 'success' })
+    }, [showToast])
+
+    // Modal kapat (Escape)
+    const handleCloseModal = useCallback(() => {
+        setIsCreateModalOpen(false)
+    }, [])
+
     useKeyboardShortcuts({
         shortcuts: [
             { key: ' ', action: handleGoHome, description: 'Ana Sayfa' },
             { key: 'n', action: handleNewRecord, description: 'Yeni Kayıt' },
             { key: ',', ctrl: true, action: handleOpenSettings, description: 'Ayarlar' },
+            { key: 'k', ctrl: true, action: handleFocusSearch, description: 'Ara' },
+            { key: 'z', ctrl: true, action: handleUndo, description: 'Geri Al', allowInInput: true },
+            { key: 'Escape', action: handleCloseModal, description: 'Modal Kapat', allowInInput: true },
         ],
         enabled: isDesktop,
     })
@@ -98,64 +145,62 @@ export function AppLayout() {
     ], [navigate])
 
     return (
-        <ToastProvider>
-            <FocusModeProvider>
-                <ScrollToTop />
-                <CreateTypeModal
-                    isOpen={isCreateModalOpen}
-                    onClose={() => setIsCreateModalOpen(false)}
-                    onSelect={handleCreateTypeSelect}
-                />
-                <div className="flex h-screen w-full overflow-hidden bg-[#0f0f0f]">
-                    {/* Desktop Sidebar */}
-                    {(isDesktop || isTablet) && <Sidebar collapsed={isTablet} />}
+        <FocusModeProvider>
+            <ScrollToTop />
+            <CreateTypeModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onSelect={handleCreateTypeSelect}
+            />
+            <div className="flex h-screen w-full overflow-hidden bg-[#0f0f0f]">
+                {/* Desktop Sidebar */}
+                {(isDesktop || isTablet) && <Sidebar collapsed={isTablet} />}
 
-                    {/* Main Content */}
-                    <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#13131a]">
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
-                            <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
-                                {/* Header Component */}
-                                <Header
-                                    searchQuery={searchQuery}
-                                    onSearchChange={setSearchQuery}
-                                    onNewTask={() => navigate('/planner/tasks')}
-                                    onCalendarClick={() => navigate('/calendar')}
-                                />
+                {/* Main Content */}
+                <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#13131a]">
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
+                            {/* Header Component */}
+                            <Header
+                                searchQuery={searchQuery}
+                                onSearchChange={setSearchQuery}
+                                onNewTask={() => navigate('/planner/tasks')}
+                                onCalendarClick={() => navigate('/calendar')}
+                            />
 
-                                {/* Top bar with offline indicator and privacy toggle */}
-                                <div className="flex items-center justify-end gap-2 mb-4">
-                                    <OfflineIndicator variant="minimal" />
-                                    <PrivacyToggle />
-                                </div>
+                            {/* Top bar with offline indicator and privacy toggle */}
+                            <div className="flex items-center justify-end gap-2 mb-4">
+                                <OfflineIndicator variant="minimal" />
+                                <PrivacyToggle />
+                            </div>
 
-                                {/* Page Content */}
-                                <div key={location.pathname} className="animate-fade-in">
-                                    <Outlet />
-                                </div>
+                            {/* Page Content */}
+                            <div key={location.pathname} className="animate-fade-in">
+                                <Outlet />
                             </div>
                         </div>
-                    </main>
+                    </div>
+                </main>
 
-                    {/* Right Panel - Desktop Only */}
-                    {isDesktop && (
-                        <RightPanel
-                            collapsed={rightPanelCollapsed}
-                            onToggle={() => setRightPanelCollapsed(!rightPanelCollapsed)}
-                        />
-                    )}
-
-                    {/* Mobile Bottom Navigation */}
-                    {isMobile && <BottomNavigation />}
-
-                    {/* Global Create FAB */}
-                    <SmartFab
-                        onPrimaryAction={() => setIsCreateModalOpen(true)}
-                        secondaryActions={fabActions}
-                        position="bottom-right"
-                        icon={<PlusIcon className="w-7 h-7" />}
+                {/* Right Panel - Desktop Only */}
+                {isDesktop && (
+                    <RightPanel
+                        collapsed={rightPanelCollapsed}
+                        onToggle={() => setRightPanelCollapsed(!rightPanelCollapsed)}
                     />
-                </div>
-            </FocusModeProvider>
-        </ToastProvider>
+                )}
+
+                {/* Mobile Bottom Navigation */}
+                {isMobile && <BottomNavigation />}
+
+                {/* Global Create FAB */}
+                <SmartFab
+                    onPrimaryAction={() => setIsCreateModalOpen(true)}
+                    secondaryActions={fabActions}
+                    position="bottom-right"
+                    icon={<PlusIcon className="w-7 h-7" />}
+                />
+            </div>
+        </FocusModeProvider>
     )
 }

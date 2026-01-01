@@ -1,12 +1,16 @@
-import { ArrowLeft, CalendarDays, CheckCircle2, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCompletionFeedback } from '@/shared/hooks'
+import { ArrowLeft, CalendarDays, CheckCircle2, GripVertical, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ExternalSearchButtons } from '../components/features/ExternalSearchButtons'
+import { LectureNotes } from '../components/features/LectureNotes'
 import { Button, IconButton } from '../components/ui/Button'
 import { Badge, Card, EmptyState } from '../components/ui/Card'
 import { Input, Select, Textarea } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { cn, formatDateDisplay, getDaysUntil } from '../lib/utils'
 import { usePlannerStore } from '../store'
+import { usePlannerAppStore } from '../store/plannerAppStore'
 import type { PlannerEvent, PlannerEventType, Task, TaskStatus, Unit } from '../types'
 
 type TaskWithUnit = { task: Task; unit: Unit }
@@ -34,11 +38,34 @@ export function CourseDetailPage() {
     const addTask = usePlannerStore(state => state.addTask)
     const updateTask = usePlannerStore(state => state.updateTask)
     const deleteTask = usePlannerStore(state => state.deleteTask)
-    const toggleTaskCompletion = usePlannerStore(state => state.toggleTaskCompletion)
+    const toggleTaskCompletionBase = usePlannerStore(state => state.toggleTaskCompletion)
 
     const addEvent = usePlannerStore(state => state.addEvent)
     const updateEvent = usePlannerStore(state => state.updateEvent)
     const deleteEvent = usePlannerStore(state => state.deleteEvent)
+
+    // Completion feedback (ses + haptic)
+    const settings = usePlannerAppStore(state => state.settings)
+    const { triggerCompletionFeedback } = useCompletionFeedback({
+        soundEnabled: settings.soundEnabled,
+    })
+
+    // Confetti state
+    const [showConfetti, setShowConfetti] = useState(false)
+
+    // Wrap toggle with completion feedback
+    const toggleTaskCompletion = useCallback((taskId: string) => {
+        const isCurrentlyCompleted = completedTaskIds.includes(taskId)
+
+        if (!isCurrentlyCompleted) {
+            // Görev tamamlanıyor
+            triggerCompletionFeedback()
+            setShowConfetti(true)
+            setTimeout(() => setShowConfetti(false), 1000)
+        }
+
+        toggleTaskCompletionBase(taskId)
+    }, [completedTaskIds, toggleTaskCompletionBase, triggerCompletionFeedback])
 
     const course = useMemo(() => courses.find(c => c.id === courseId), [courses, courseId])
 
@@ -106,6 +133,59 @@ export function CourseDetailPage() {
         description: '',
         color: '#f97316',
     })
+
+    // Drag & Drop state
+    const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
+    const dragOverTaskId = useRef<string | null>(null)
+
+    const reorderUnits = usePlannerStore(state => state.reorderUnits)
+
+    // Drag handlers for tasks within same unit
+    const handleDragStart = useCallback((e: React.DragEvent, taskId: string) => {
+        setDraggedTaskId(taskId)
+        e.dataTransfer.effectAllowed = 'move'
+        e.dataTransfer.setData('text/plain', taskId)
+    }, [])
+
+    const handleDragOver = useCallback((e: React.DragEvent, taskId: string) => {
+        e.preventDefault()
+        dragOverTaskId.current = taskId
+    }, [])
+
+    const handleDragEnd = useCallback(() => {
+        if (!draggedTaskId || !dragOverTaskId.current || !course) {
+            setDraggedTaskId(null)
+            return
+        }
+
+        // Find source and target task positions
+        const sourceTask = tasks.find(t => t.task.id === draggedTaskId)
+        const targetTask = tasks.find(t => t.task.id === dragOverTaskId.current)
+
+        if (sourceTask && targetTask && sourceTask.unit.id === targetTask.unit.id) {
+            // Same unit - reorder tasks within unit
+            const unit = course.units.find(u => u.id === sourceTask.unit.id)
+            if (unit) {
+                const tasksCopy = [...unit.tasks]
+                const sourceIndex = tasksCopy.findIndex(t => t.id === draggedTaskId)
+                const targetIndex = tasksCopy.findIndex(t => t.id === dragOverTaskId.current)
+
+                if (sourceIndex !== -1 && targetIndex !== -1) {
+                    const [removed] = tasksCopy.splice(sourceIndex, 1)
+                    tasksCopy.splice(targetIndex, 0, removed)
+
+                    // Update unit with reordered tasks
+                    const updatedUnits = course.units.map(u =>
+                        u.id === unit.id ? { ...u, tasks: tasksCopy } : u
+                    )
+                    reorderUnits(course.id, updatedUnits)
+                }
+            }
+        }
+
+        setDraggedTaskId(null)
+        dragOverTaskId.current = null
+    }, [draggedTaskId, tasks, course, reorderUnits])
 
     if (!hasHydrated) {
         return (
@@ -261,7 +341,28 @@ export function CourseDetailPage() {
     }
 
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-fade-in relative">
+            {/* Confetti Overlay */}
+            {showConfetti && (
+                <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+                    {Array.from({ length: 20 }).map((_, i) => {
+                        const colors = ['#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#ec4899']
+                        return (
+                            <div
+                                key={i}
+                                className="absolute w-2 h-2 rounded-full animate-confetti"
+                                style={{
+                                    left: `${Math.random() * 100}%`,
+                                    backgroundColor: colors[i % 5],
+                                    animationDelay: `${Math.random() * 0.3}s`,
+                                    animationDuration: `${0.6 + Math.random() * 0.4}s`,
+                                }}
+                            />
+                        )
+                    })}
+                </div>
+            )}
+
             <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
                     <IconButton variant="ghost" onClick={() => navigate('/planner/courses')} title="Geri">
@@ -337,14 +438,25 @@ export function CourseDetailPage() {
                         <div className="space-y-2">
                             {tasks.map(({ task, unit }) => {
                                 const isCompleted = completedTaskIds.includes(task.id)
+                                const isDragging = draggedTaskId === task.id
                                 return (
                                     <div
                                         key={task.id}
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, task.id)}
+                                        onDragOver={(e) => handleDragOver(e, task.id)}
+                                        onDragEnd={handleDragEnd}
                                         className={cn(
-                                            'p-3 rounded-xl border flex items-start gap-3',
-                                            'border-default bg-secondary/20 hover:bg-secondary/30 transition-colors'
+                                            'p-3 rounded-xl border flex items-start gap-3 cursor-grab active:cursor-grabbing',
+                                            'border-default bg-secondary/20 hover:bg-secondary/30 transition-all',
+                                            isDragging && 'opacity-50 scale-[0.98] ring-2 ring-cyan-400/50'
                                         )}
                                     >
+                                        {/* Drag Handle */}
+                                        <div className="mt-0.5 text-tertiary hover:text-secondary cursor-grab">
+                                            <GripVertical className="w-4 h-4" />
+                                        </div>
+
                                         <button
                                             onClick={() => toggleTaskCompletion(task.id)}
                                             className={cn(
@@ -366,6 +478,9 @@ export function CourseDetailPage() {
                                                 <span className="capitalize">• {task.status}</span>
                                             </div>
                                         </div>
+
+                                        {/* External Search Buttons */}
+                                        <ExternalSearchButtons title={task.text} description={task.note} />
 
                                         <div className="flex items-center gap-1">
                                             <IconButton size="sm" onClick={() => openEditTask(task, unit.id)} title="Düzenle">
@@ -450,6 +565,9 @@ export function CourseDetailPage() {
                         </div>
                     )}
                 </Card>
+
+                {/* Ders Notları (PDF) */}
+                <LectureNotes courseId={course.id} courseName={course.title} />
             </div>
 
             {/* Edit Course Modal */}
