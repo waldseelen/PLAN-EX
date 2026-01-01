@@ -1,21 +1,24 @@
 import {
+    AcademicCapIcon,
     CalendarDaysIcon,
     ChartBarIcon,
     CheckCircleIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
+    ClipboardDocumentListIcon,
+    ClockIcon,
     Cog6ToothIcon,
     HomeIcon,
-    RectangleStackIcon,
-    SparklesIcon,
 } from '@heroicons/react/24/outline'
 import {
+    AcademicCapIcon as AcademicCapIconSolid,
     CalendarDaysIcon as CalendarDaysIconSolid,
     ChartBarIcon as ChartBarIconSolid,
     CheckCircleIcon as CheckCircleIconSolid,
+    ClipboardDocumentListIcon as ClipboardDocumentListIconSolid,
+    ClockIcon as ClockIconSolid,
     Cog6ToothIcon as Cog6ToothIconSolid,
     HomeIcon as HomeIconSolid,
-    RectangleStackIcon as RectangleStackIconSolid,
 } from '@heroicons/react/24/solid'
 import { clsx } from 'clsx'
 import { useState } from 'react'
@@ -24,9 +27,15 @@ import { NavLink } from 'react-router-dom'
 const navItems = [
     {
         to: '/',
-        label: 'Dashboard',
+        label: 'Ana Sayfa',
         icon: HomeIcon,
         activeIcon: HomeIconSolid,
+    },
+    {
+        to: '/courses',
+        label: 'Dersler',
+        icon: AcademicCapIcon,
+        activeIcon: AcademicCapIconSolid,
     },
     {
         to: '/calendar',
@@ -35,22 +44,28 @@ const navItems = [
         activeIcon: CalendarDaysIconSolid,
     },
     {
-        to: '/statistics',
-        label: 'İstatistikler',
-        icon: ChartBarIcon,
-        activeIcon: ChartBarIconSolid,
-    },
-    {
-        to: '/activities',
-        label: 'Aktiviteler',
-        icon: RectangleStackIcon,
-        activeIcon: RectangleStackIconSolid,
+        to: '/tasks',
+        label: 'Görevler',
+        icon: ClipboardDocumentListIcon,
+        activeIcon: ClipboardDocumentListIconSolid,
     },
     {
         to: '/habits',
         label: 'Alışkanlıklar',
         icon: CheckCircleIcon,
         activeIcon: CheckCircleIconSolid,
+    },
+    {
+        to: '/productivity',
+        label: 'Pomodoro',
+        icon: ClockIcon,
+        activeIcon: ClockIconSolid,
+    },
+    {
+        to: '/statistics',
+        label: 'İstatistikler',
+        icon: ChartBarIcon,
+        activeIcon: ChartBarIconSolid,
     },
     {
         to: '/settings',
@@ -76,14 +91,14 @@ export function Sidebar({ collapsed: initialCollapsed = false }: SidebarProps) {
             <div className={clsx('h-20 flex items-center', isCollapsed ? 'px-4 justify-center' : 'px-6')}>
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                        <SparklesIcon className="w-5 h-5 text-white" />
+                        <span className="text-white font-bold text-xs">P.EX</span>
                     </div>
                     {!isCollapsed && (
                         <div className="animate-fade-in">
                             <span className="text-xl font-bold text-gradient">
-                                LifeFlow
+                                PLAN.EX
                             </span>
-                            <p className="text-xs text-primary-500 dark:text-primary-400">Yaşam Akışı</p>
+                            <p className="text-xs text-primary-500 dark:text-primary-400">Akıllı Planlama</p>
                         </div>
                     )}
                 </div>
@@ -154,7 +169,7 @@ export function Sidebar({ collapsed: initialCollapsed = false }: SidebarProps) {
             {!isCollapsed && (
                 <div className="p-4 mx-4 mb-4 rounded-2xl bg-gradient-to-r from-primary-100/60 via-accent-100/40 to-success-100/40 dark:from-primary-900/30 dark:via-accent-900/20 dark:to-success-900/20 border border-primary-200/40 dark:border-primary-700/30">
                     <p className="text-xs font-medium text-primary-700 dark:text-primary-300">
-                        LifeFlow v0.1.0
+                        PLAN.EX v1.0.0
                     </p>
                     <p className="text-xs text-primary-600/70 dark:text-primary-400/70 mt-0.5">
                         Offline-First PWA

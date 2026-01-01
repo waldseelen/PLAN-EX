@@ -1,42 +1,38 @@
-import { useTimerStore } from '@/modules/core-time/store/timerStore'
-import { FocusModeProvider, OfflineIndicator, PrivacyToggle, SmartFab, ToastProvider } from '@/shared/components'
+import { FocusModeProvider, OfflineIndicator, PrivacyToggle, ScrollToTop, SmartFab, ToastProvider } from '@/shared/components'
 import { useDocumentTitle, useDynamicFavicon, useKeyboardShortcuts } from '@/shared/hooks'
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery'
 import { CheckCircleIcon, ClockIcon, PencilIcon } from '@heroicons/react/24/outline'
-import { useCallback, useMemo } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { useCallback, useMemo, useState } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNavigation } from '../components/BottomNavigation'
-import { Sidebar } from '../components/Sidebar'
+import { Header } from '../components/Header'
+import { RightPanel } from '../components/RightPanel'
+import { Sidebar } from '../components/SidebarNew'
 
 export function AppLayout() {
-    const isDesktop = useMediaQuery('(min-width: 1024px)')
-    const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1023px)')
+    const isDesktop = useMediaQuery('(min-width: 1280px)')
+    const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1279px)')
+    const isMobile = useMediaQuery('(max-width: 767px)')
     const navigate = useNavigate()
+    const location = useLocation()
+    const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
 
-    // Timer state for dynamic title
-    const { runningTimers, getElapsedSeconds } = useTimerStore()
-    const activeTimer = runningTimers[0]
-    const elapsedSeconds = activeTimer ? getElapsedSeconds(activeTimer) : 0
-    const isTimerRunning = runningTimers.length > 0
-
-    // Dynamic document title when timer is running
+    // Dynamic document title
     useDocumentTitle({
-        timerSeconds: elapsedSeconds,
-        activityName: activeTimer ? 'Timer' : undefined,
-        isRunning: isTimerRunning,
-        defaultTitle: 'LifeFlow - Yaşam Akışı',
+        timerSeconds: 0,
+        activityName: undefined,
+        isRunning: false,
+        defaultTitle: 'Plan.Ex - Akıllı Planlama',
     })
 
     // Dynamic favicon
-    useDynamicFavicon(isTimerRunning)
+    useDynamicFavicon(false)
 
     // Keyboard shortcuts
-    const handleToggleTimer = useCallback(() => {
-        // Timer toggle logic - navigates to dashboard if not there
-        if (runningTimers.length === 0) {
-            navigate('/')
-        }
-    }, [runningTimers, navigate])
+    const handleGoHome = useCallback(() => {
+        navigate('/')
+    }, [navigate])
 
     const handleNewRecord = useCallback(() => {
         navigate('/habits')
@@ -48,7 +44,7 @@ export function AppLayout() {
 
     useKeyboardShortcuts({
         shortcuts: [
-            { key: ' ', action: handleToggleTimer, description: 'Timer Başlat/Durdur' },
+            { key: ' ', action: handleGoHome, description: 'Ana Sayfa' },
             { key: 'n', action: handleNewRecord, description: 'Yeni Kayıt' },
             { key: ',', ctrl: true, action: handleOpenSettings, description: 'Ayarlar' },
         ],
@@ -80,28 +76,47 @@ export function AppLayout() {
     return (
         <ToastProvider>
             <FocusModeProvider>
-                <div className="min-h-screen flex">
+                <ScrollToTop />
+                <div className="flex h-screen w-full overflow-hidden bg-[#0f0f0f]">
                     {/* Desktop Sidebar */}
-                    {isDesktop && <Sidebar />}
-
-                    {/* Tablet Collapsed Sidebar */}
-                    {isTablet && <Sidebar collapsed />}
+                    {(isDesktop || isTablet) && <Sidebar collapsed={isTablet} />}
 
                     {/* Main Content */}
-                    <main className="flex-1 flex flex-col min-h-screen">
-                        {/* Top bar with offline indicator and privacy toggle */}
-                        <div className="flex items-center justify-end gap-2 px-4 py-2 lg:px-6">
-                            <OfflineIndicator variant="minimal" />
-                            <PrivacyToggle />
-                        </div>
+                    <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#13131a]">
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                            <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
+                                {/* Header Component */}
+                                <Header
+                                    searchQuery={searchQuery}
+                                    onSearchChange={setSearchQuery}
+                                    onNewTask={() => navigate('/tasks')}
+                                    onCalendarClick={() => navigate('/calendar')}
+                                />
 
-                        <div className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6">
-                            <Outlet />
+                                {/* Top bar with offline indicator and privacy toggle */}
+                                <div className="flex items-center justify-end gap-2 mb-4">
+                                    <OfflineIndicator variant="minimal" />
+                                    <PrivacyToggle />
+                                </div>
+
+                                {/* Page Content */}
+                                <div key={location.pathname} className="animate-fade-in">
+                                    <Outlet />
+                                </div>
+                            </div>
                         </div>
                     </main>
 
+                    {/* Right Panel - Desktop Only */}
+                    {isDesktop && (
+                        <RightPanel
+                            collapsed={rightPanelCollapsed}
+                            onToggle={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+                        />
+                    )}
+
                     {/* Mobile Bottom Navigation */}
-                    {!isDesktop && !isTablet && <BottomNavigation />}
+                    {isMobile && <BottomNavigation />}
 
                     {/* Smart FAB for Desktop */}
                     {isDesktop && (

@@ -1,3 +1,9 @@
+import { DB_CONSTANTS } from '@/config'
+import {
+    DEFAULT_CATEGORIES,
+    DEFAULT_POMODORO_CONFIG,
+    DEFAULT_SETTINGS_DATA
+} from '@/config/defaults'
 import Dexie, { type EntityTable } from 'dexie'
 import type {
     Activity,
@@ -14,8 +20,12 @@ import type {
     TimeSession,
 } from './types'
 
-// Current schema version
-export const SCHEMA_VERSION = 1
+/**
+ * LifeFlow Database
+ *
+ * Dexie.js ile IndexedDB yönetimi.
+ * Schema migration desteği ile versiyon yönetimi.
+ */
 
 export class LifeFlowDB extends Dexie {
     // Tables
@@ -33,9 +43,12 @@ export class LifeFlowDB extends Dexie {
     settings!: EntityTable<Setting, 'key'>
 
     constructor() {
-        super('LifeFlowDB')
+        super(DB_CONSTANTS.DB_NAME)
 
-        this.version(SCHEMA_VERSION).stores({
+        // ============================================
+        // Version 1 - Initial Schema
+        // ============================================
+        this.version(1).stores({
             // Core
             categories: 'id, name, archived, createdAt',
             tags: 'id, name, groupId',
@@ -60,85 +73,59 @@ export class LifeFlowDB extends Dexie {
             // Settings
             settings: 'key',
         })
+
+        // ============================================
+        // Version 2 - Future Migration Example
+        // Yeni alan eklendiğinde bu şekilde migrate edilir
+        // ============================================
+        // this.version(2).stores({
+        //     // Yeni index ekle
+        //     rules: 'id, trigger, enabled, priority',
+        // }).upgrade(async tx => {
+        //     // Mevcut rules'a priority ekle
+        //     await tx.table('rules').toCollection().modify(rule => {
+        //         rule.priority = rule.priority ?? 0
+        //     })
+        // })
     }
 }
 
 // Singleton instance
 export const db = new LifeFlowDB()
 
-// Default data seeding
-export async function seedDefaultData() {
-    const settingsCount = await db.settings.count()
+/**
+ * Default data seeding
+ *
+ * İlk kurulumda varsayılan verileri oluşturur.
+ * Config/defaults.ts'den merkezi yapılandırma kullanılır.
+ */
+export async function seedDefaultData(): Promise<void> {
+    try {
+        // Settings
+        const settingsCount = await db.settings.count()
+        if (settingsCount === 0) {
+            await db.settings.bulkAdd(DEFAULT_SETTINGS_DATA)
+        }
 
-    if (settingsCount === 0) {
-        // Seed default settings
-        await db.settings.bulkAdd([
-            { key: 'rolloverHour', value: 4 },
-            { key: 'weekStart', value: 1 }, // Monday
-            { key: 'theme', value: 'system' },
-            { key: 'language', value: 'tr' },
-            { key: 'multitaskingEnabled', value: false },
-            { key: 'mergeThresholdMinutes', value: 5 },
-        ])
-    }
+        // Pomodoro Config
+        const pomodoroCount = await db.pomodoroConfigs.count()
+        if (pomodoroCount === 0) {
+            await db.pomodoroConfigs.add(DEFAULT_POMODORO_CONFIG)
+        }
 
-    const pomodoroCount = await db.pomodoroConfigs.count()
-
-    if (pomodoroCount === 0) {
-        // Seed default pomodoro config
-        await db.pomodoroConfigs.add({
-            id: 'default-pomodoro',
-            name: 'Standart Pomodoro',
-            workDuration: 25 * 60, // 25 minutes
-            shortBreakDuration: 5 * 60, // 5 minutes
-            longBreakDuration: 15 * 60, // 15 minutes
-            sessionsBeforeLongBreak: 4,
-            isDefault: true,
-        })
-    }
-
-    const categoryCount = await db.categories.count()
-
-    if (categoryCount === 0) {
-        // Seed sample categories
-        const now = Date.now()
-        await db.categories.bulkAdd([
-            {
-                id: 'cat-work',
-                name: 'İş',
-                color: '#06b6d4',
-                icon: '💼',
-                archived: false,
+        // Categories
+        const categoryCount = await db.categories.count()
+        if (categoryCount === 0) {
+            const now = Date.now()
+            const categories = DEFAULT_CATEGORIES.map(cat => ({
+                ...cat,
                 createdAt: now,
                 updatedAt: now,
-            },
-            {
-                id: 'cat-personal',
-                name: 'Kişisel',
-                color: '#22c55e',
-                icon: '🏠',
-                archived: false,
-                createdAt: now,
-                updatedAt: now,
-            },
-            {
-                id: 'cat-health',
-                name: 'Sağlık',
-                color: '#a3e635',
-                icon: '❤️',
-                archived: false,
-                createdAt: now,
-                updatedAt: now,
-            },
-            {
-                id: 'cat-learning',
-                name: 'Öğrenme',
-                color: '#f59e0b',
-                icon: '📚',
-                archived: false,
-                createdAt: now,
-                updatedAt: now,
-            },
-        ])
+            }))
+            await db.categories.bulkAdd(categories)
+        }
+    } catch (error) {
+        console.error('[DB] Seed data error:', error)
+        throw error
     }
 }

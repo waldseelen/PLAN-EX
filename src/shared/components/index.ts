@@ -1,7 +1,10 @@
 export { ConfirmDialog } from './ConfirmDialog'
 export { EmptyState } from './EmptyState'
+export { ErrorBoundary, GlobalErrorBoundary, PageErrorBoundary, WidgetErrorBoundary } from './ErrorBoundary'
 export { Modal } from './Modal'
+export { OptimizedImage, useLazyLoad } from './OptimizedImage'
 export { ProgressRing } from './ProgressRing'
+export { QuickActionModal } from './QuickActionModal'
 export { Skeleton, SkeletonActivityCard, SkeletonCard, SkeletonHabitCard, SkeletonStatCard } from './Skeleton'
 
 // New UX Components
@@ -14,6 +17,7 @@ export { Heatmap } from './Heatmap'
 export { OfflineIndicator } from './OfflineIndicator'
 export { PrivacyBlur, PrivacyProvider, PrivacyToggle, usePrivacyMode } from './PrivacyMode'
 export { PWAInstallBanner } from './PWAInstallBanner'
+export { ScrollToTop } from './ScrollToTop'
 export { SmartFab, defaultFabActions } from './SmartFab'
 export { SwipeableItem, SwipeableList } from './SwipeableItem'
 export { CompactTimeline, Timeline } from './Timeline'

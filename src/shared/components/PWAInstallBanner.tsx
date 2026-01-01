@@ -88,8 +88,8 @@ export function PWAInstallBanner({
                         </h3>
                         <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
                             {isInstalled
-                                ? 'LifeFlow cihazınıza yüklendi! Ana ekrandan hızlıca erişebilirsiniz.'
-                                : 'LifeFlow\'u ana ekranınıza ekleyerek daha hızlı erişim sağlayın. Çevrimdışı bile çalışır!'}
+                                ? 'Plan.Ex cihazınıza yüklendi! Ana ekrandan hızlica erişebilirsiniz.'
+                                : 'Plan.Ex\'i ana ekranınıza ekleyerek daha hızlı erişim sağlayın. Çevrimdışı bile çalışır!'}
                         </p>
                         {!isInstalled && deferredPrompt && (
                             <button
@@ -135,7 +135,7 @@ export function PWAInstallBanner({
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-surface-900 dark:text-white truncate">
-                            LifeFlow'u Yükle
+                            Plan.Ex'i Yükle
                         </p>
                         <p className="text-xs text-surface-500 dark:text-surface-400">
                             Hızlı erişim için ana ekrana ekle
@@ -203,7 +203,7 @@ export function PWAInstallBanner({
                 </div>
 
                 <h3 className="text-xl font-bold text-gradient mb-2">
-                    LifeFlow'u Yükle
+                    Plan.Ex'i Yükle
                 </h3>
                 <p className="text-sm text-surface-600 dark:text-surface-400 mb-6 max-w-xs">
                     Ana ekranına ekle, internet olmadan bile kullan. Tam uygulama deneyimi!

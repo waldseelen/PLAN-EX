@@ -1,3 +1,4 @@
-export { LifeFlowDB, SCHEMA_VERSION, db, seedDefaultData } from './database'
+export { LifeFlowDB, db, seedDefaultData } from './database'
+export * from './migrations'
 export * from './types'
 

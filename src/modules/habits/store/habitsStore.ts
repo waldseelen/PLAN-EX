@@ -2,6 +2,7 @@ import { db } from '@/db'
 import type { Habit, HabitLog, ScheduleSpec } from '@/db/types'
 import { eventBus } from '@/events'
 import { generateId, getTodayKey } from '@/shared/utils'
+import { captureException } from '@/shared/utils/errorTracking'
 import { create } from 'zustand'
 
 // ============================================
@@ -125,7 +126,10 @@ export const useHabitsStore = create<HabitsState>((set, get) => ({
                 isLoading: false,
             })
         } catch (error) {
-            console.error('Failed to initialize habits:', error)
+            captureException(error, {
+                context: 'HabitsStore.initialize',
+                category: 'database',
+            })
             set({ isLoading: false })
         }
     },

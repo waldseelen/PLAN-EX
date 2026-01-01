@@ -1,64 +1,191 @@
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { clsx } from 'clsx'
-import { useEffect, type ReactNode } from 'react'
+import { memo, useCallback, useEffect, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+
+/**
+ * Modal (Pop-up) Bileşeni
+ *
+ * Özellikler:
+ * - ESC tuşu ile kapanma
+ * - Dışına tıklayınca kapanma
+ * - Tam responsive tasarım
+ * - Focus trap (erişilebilirlik)
+ * - Smooth animasyonlar
+ * - Portal ile DOM'un dışında render
+ */
 
 interface ModalProps {
+    /** Modal'ın açık/kapalı durumu */
     isOpen: boolean
+    /** Kapanış callback'i */
     onClose: () => void
-    title: string
+    /** Modal başlığı (opsiyonel - başlıksız modal için) */
+    title?: string
+    /** Modal içeriği */
     children: ReactNode
-    size?: 'sm' | 'md' | 'lg' | 'xl'
+    /** Modal boyutu */
+    size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+    /** Kapatma butonunu gizle */
+    hideCloseButton?: boolean
+    /** Dış tıklamayı devre dışı bırak */
+    disableOutsideClick?: boolean
+    /** Footer alanı (aksiyonlar için) */
+    footer?: ReactNode
+    /** Custom class ekleme */
+    className?: string
 }
 
-export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
-    // Handle escape key
-    useEffect(() => {
-        function handleEscape(e: KeyboardEvent) {
-            if (e.key === 'Escape') onClose()
-        }
+export const Modal = memo(function Modal({
+    isOpen,
+    onClose,
+    title,
+    children,
+    size = 'md',
+    hideCloseButton = false,
+    disableOutsideClick = false,
+    footer,
+    className
+}: ModalProps) {
+    const modalRef = useRef<HTMLDivElement>(null)
+    const previousActiveElement = useRef<HTMLElement | null>(null)
 
+    // ESC tuşu ile kapanma
+    const handleEscape = useCallback((e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            e.preventDefault()
+            onClose()
+        }
+    }, [onClose])
+
+    // Focus trap - Tab ile modal dışına çıkmayı engelle
+    const handleTabKey = useCallback((e: KeyboardEvent) => {
+        if (e.key !== 'Tab' || !modalRef.current) return
+
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+        const firstElement = focusableElements[0]
+        const lastElement = focusableElements[focusableElements.length - 1]
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault()
+            lastElement?.focus()
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault()
+            firstElement?.focus()
+        }
+    }, [])
+
+    useEffect(() => {
         if (isOpen) {
+            // Önceki aktif elementi kaydet
+            previousActiveElement.current = document.activeElement as HTMLElement
+
+            // Event listener'ları ekle
             document.addEventListener('keydown', handleEscape)
+            document.addEventListener('keydown', handleTabKey)
+
+            // Body scroll'u engelle
             document.body.style.overflow = 'hidden'
+
+            // Modal'a focus ver - anında
+            requestAnimationFrame(() => {
+                modalRef.current?.focus()
+            })
         }
 
         return () => {
             document.removeEventListener('keydown', handleEscape)
+            document.removeEventListener('keydown', handleTabKey)
             document.body.style.overflow = ''
+
+            // Önceki elemente focus'u geri ver
+            previousActiveElement.current?.focus()
         }
-    }, [isOpen, onClose])
+    }, [isOpen, handleEscape, handleTabKey])
+
+    // Dışarı tıklama handler'ı
+    const handleBackdropClick = (e: React.MouseEvent) => {
+        if (!disableOutsideClick && e.target === e.currentTarget) {
+            onClose()
+        }
+    }
 
     if (!isOpen) return null
 
+    // Boyut sınıfları - responsive
     const sizeClasses = {
         sm: 'max-w-sm',
         md: 'max-w-md',
         lg: 'max-w-lg',
-        xl: 'max-w-xl',
+        xl: 'max-w-2xl',
+        full: 'max-w-4xl'
     }
 
-    return (
-        <div className="modal-backdrop" onClick={onClose}>
+    const modalContent = (
+        <div
+            className="modal-backdrop"
+            onClick={handleBackdropClick}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? 'modal-title' : undefined}
+        >
             <div
-                className={clsx('modal-content', sizeClasses[size])}
+                ref={modalRef}
+                tabIndex={-1}
+                className={clsx(
+                    'modal-content',
+                    sizeClasses[size],
+                    'focus:outline-none',
+                    className
+                )}
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-surface-900 dark:text-white">
-                        {title}
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="btn-icon text-surface-500 hover:text-surface-700 dark:hover:text-surface-300"
-                    >
-                        <XMarkIcon className="w-5 h-5" />
-                    </button>
-                </div>
+                {/* Header - yalnızca başlık varsa veya kapatma butonu görünürse göster */}
+                {(title || !hideCloseButton) && (
+                    <div className="flex items-center justify-between mb-6">
+                        {title && (
+                            <h2
+                                id="modal-title"
+                                className="text-xl font-semibold text-surface-900 dark:text-white"
+                            >
+                                {title}
+                            </h2>
+                        )}
+                        {!hideCloseButton && (
+                            <button
+                                onClick={onClose}
+                                className={clsx(
+                                    'btn-icon text-surface-500 hover:text-surface-700 dark:hover:text-surface-300',
+                                    'min-w-[44px] min-h-[44px] flex items-center justify-center',
+                                    'transition-colors duration-200 rounded-full',
+                                    'hover:bg-surface-100 dark:hover:bg-surface-700',
+                                    !title && 'ml-auto' // Başlık yoksa butonu sağa hizala
+                                )}
+                                aria-label="Kapat"
+                            >
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {/* Content */}
-                {children}
+                <div className="modal-body">
+                    {children}
+                </div>
+
+                {/* Footer - varsa göster */}
+                {footer && (
+                    <div className="modal-footer mt-6 pt-4 border-t border-surface-200 dark:border-surface-700 flex flex-wrap gap-3 justify-end">
+                        {footer}
+                    </div>
+                )}
             </div>
         </div>
     )
-}
+
+    // Portal ile body'ye direkt render (z-index sorunlarını önler)
+    return createPortal(modalContent, document.body)
+})

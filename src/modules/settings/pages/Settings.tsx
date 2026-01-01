@@ -4,11 +4,13 @@ import { PWAInstallBanner } from '@/shared/components'
 import {
     ArrowDownTrayIcon,
     ArrowUpTrayIcon,
+    ClockIcon,
     ComputerDesktopIcon,
     MoonIcon,
     ShieldCheckIcon,
     SparklesIcon,
-    SunIcon,
+    SpeakerWaveIcon,
+    SunIcon
 } from '@heroicons/react/24/outline'
 import { clsx } from 'clsx'
 import { useEffect, useState } from 'react'
@@ -16,7 +18,21 @@ import { useSettingsStore } from '../store/settingsStore'
 
 export function Settings() {
     const { theme, setTheme } = useTheme()
-    const { rolloverHour, weekStart, setRolloverHour, setWeekStart, initialize } = useSettingsStore()
+    const {
+        rolloverHour,
+        weekStart,
+        setRolloverHour,
+        setWeekStart,
+        initialize,
+        pomodoroWorkDuration,
+        pomodoroBreakDuration,
+        pomodoroLongBreakDuration,
+        pomodoroSessionsBeforeLongBreak,
+        pomodoroAutoStartBreak,
+        pomodoroAutoStartWork,
+        pomodoroSoundEnabled,
+        setPomodoroSetting,
+    } = useSettingsStore()
     const [isExporting, setIsExporting] = useState(false)
     const [isImporting, setIsImporting] = useState(false)
     const [importSuccess, setImportSuccess] = useState(false)
@@ -62,7 +78,7 @@ export function Settings() {
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
-            a.download = `lifeflow-backup-${new Date().toISOString().split('T')[0]}.json`
+            a.download = `planex-backup-${new Date().toISOString().split('T')[0]}.json`
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
@@ -260,6 +276,172 @@ export function Settings() {
                 </div>
             </div>
 
+            {/* Pomodoro Settings */}
+            <div className="card p-6">
+                <h2 className="text-lg font-semibold text-surface-900 dark:text-white mb-4 flex items-center gap-2">
+                    <ClockIcon className="w-5 h-5 text-red-500" />
+                    Pomodoro Ayarları
+                </h2>
+
+                <div className="space-y-6">
+                    {/* Duration Settings */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                                Çalışma Süresi
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    min={5}
+                                    max={60}
+                                    value={pomodoroWorkDuration}
+                                    onChange={(e) => setPomodoroSetting('pomodoroWorkDuration', Number(e.target.value))}
+                                    className="w-20 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-surface-900 dark:text-white text-center"
+                                />
+                                <span className="text-sm text-surface-500">dakika</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                                Kısa Mola
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={30}
+                                    value={pomodoroBreakDuration}
+                                    onChange={(e) => setPomodoroSetting('pomodoroBreakDuration', Number(e.target.value))}
+                                    className="w-20 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-surface-900 dark:text-white text-center"
+                                />
+                                <span className="text-sm text-surface-500">dakika</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                                Uzun Mola
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    min={5}
+                                    max={60}
+                                    value={pomodoroLongBreakDuration}
+                                    onChange={(e) => setPomodoroSetting('pomodoroLongBreakDuration', Number(e.target.value))}
+                                    className="w-20 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-surface-900 dark:text-white text-center"
+                                />
+                                <span className="text-sm text-surface-500">dakika</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Sessions before long break */}
+                    <div>
+                        <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                            Uzun Mola Öncesi Seans Sayısı
+                        </label>
+                        <div className="flex gap-2 flex-wrap">
+                            {[2, 3, 4, 5, 6].map((count) => (
+                                <button
+                                    key={count}
+                                    onClick={() => setPomodoroSetting('pomodoroSessionsBeforeLongBreak', count)}
+                                    className={clsx(
+                                        'px-4 py-2 rounded-xl text-sm font-medium transition-all',
+                                        pomodoroSessionsBeforeLongBreak === count
+                                            ? 'gradient-primary text-white shadow-glow'
+                                            : 'bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-600'
+                                    )}
+                                >
+                                    {count} seans
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Toggle Options */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-800 rounded-2xl">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                    <ClockIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <div>
+                                    <p className="font-medium text-surface-900 dark:text-white">Otomatik Mola Başlat</p>
+                                    <p className="text-sm text-surface-500 dark:text-surface-400">
+                                        Çalışma bittikten sonra molayı otomatik başlat
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setPomodoroSetting('pomodoroAutoStartBreak', !pomodoroAutoStartBreak)}
+                                className={clsx(
+                                    'relative w-12 h-7 rounded-full transition-colors',
+                                    pomodoroAutoStartBreak ? 'bg-green-500' : 'bg-surface-300 dark:bg-surface-600'
+                                )}
+                            >
+                                <div className={clsx(
+                                    'absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm',
+                                    pomodoroAutoStartBreak ? 'translate-x-6' : 'translate-x-1'
+                                )} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-800 rounded-2xl">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                    <ClockIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                    <p className="font-medium text-surface-900 dark:text-white">Otomatik Çalışma Başlat</p>
+                                    <p className="text-sm text-surface-500 dark:text-surface-400">
+                                        Mola bittikten sonra çalışmayı otomatik başlat
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setPomodoroSetting('pomodoroAutoStartWork', !pomodoroAutoStartWork)}
+                                className={clsx(
+                                    'relative w-12 h-7 rounded-full transition-colors',
+                                    pomodoroAutoStartWork ? 'bg-blue-500' : 'bg-surface-300 dark:bg-surface-600'
+                                )}
+                            >
+                                <div className={clsx(
+                                    'absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm',
+                                    pomodoroAutoStartWork ? 'translate-x-6' : 'translate-x-1'
+                                )} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-800 rounded-2xl">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                    <SpeakerWaveIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div>
+                                    <p className="font-medium text-surface-900 dark:text-white">Ses Bildirimleri</p>
+                                    <p className="text-sm text-surface-500 dark:text-surface-400">
+                                        Zamanlayıcı bittiğinde ses çal
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setPomodoroSetting('pomodoroSoundEnabled', !pomodoroSoundEnabled)}
+                                className={clsx(
+                                    'relative w-12 h-7 rounded-full transition-colors',
+                                    pomodoroSoundEnabled ? 'bg-purple-500' : 'bg-surface-300 dark:bg-surface-600'
+                                )}
+                            >
+                                <div className={clsx(
+                                    'absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm',
+                                    pomodoroSoundEnabled ? 'translate-x-6' : 'translate-x-1'
+                                )} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Data Management */}
             <div className="card p-6">
                 <h2 className="text-lg font-semibold text-surface-900 dark:text-white mb-4">
@@ -331,7 +513,7 @@ export function Settings() {
                         <SparklesIcon className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-gradient">LifeFlow</h2>
+                        <h2 className="text-lg font-bold text-gradient">Plan.Ex</h2>
                         <p className="text-sm text-surface-500">v0.1.0 (MVP)</p>
                     </div>
                 </div>

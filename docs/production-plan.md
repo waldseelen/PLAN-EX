@@ -1,6 +1,6 @@
-# LifeFlow (Offline‑First PWA) — Production Plan (MVP → v1 → v2)
+# Plan.Ex (Offline‑First PWA) — Production Plan (MVP → v1 → v2)
 
-> Tarih: 2025-12-30
+> Tarih: 2026-01-01 (güncellendi)
 > Hedef: Tek kod tabanı ile **offline‑first PWA**. v1’de **sunucusuz** (hesap zorunlu değil). Senkron/Drive/Dropbox **opsiyonel modül**.
 > v2: PWA kısıtlarını aşmak için **Capacitor wrapper** ile aynı web UI’ı “native yeteneklerle” genişletme.
 
@@ -8,7 +8,7 @@
 
 ## 1) Ürün Tanımı
 
-LifeFlow; zaman takibi (STT benzeri) + alışkanlık takibi (uhabits benzeri) + hedefler/kurallar + içgörü/istatistik + veri kasası (export/import/şifreleme) özelliklerini **tek bir offline uygulamada** birleştirir.
+Plan.Ex; ders/kurs takibi + görev yönetimi + alışkanlık takibi + Pomodoro timer + takvim + içgörü/istatistik + veri kasası (export/import) özelliklerini **tek bir offline uygulamada** birleştirir.
 
 ### 1.1 İlkeler
 - **Offline‑first**: Tüm çekirdek işlevler ağ olmadan çalışır.

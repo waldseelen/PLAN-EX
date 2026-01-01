@@ -1,8 +1,42 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Fontlar @fontsource üzerinden main.tsx'de import edilir */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Plan.Ex Dark-Tech CSS Variables */
+:root {
+    --color-bg: #0f0f0f;
+    --color-surface: #13131a;
+    --color-surface-2: #181c24;
+    --color-surface-3: #1f2430;
+    --color-glass: rgba(255, 255, 255, 0.06);
+    --color-stroke: rgba(255, 255, 255, 0.08);
+    --color-shadow: rgba(0, 0, 0, 0.45);
+
+    --color-primary: #00aeef;
+    --color-primary-2: #29c6cd;
+    --color-accent: #ffd200;
+    --color-accent-2: #f4e04d;
+
+    --color-text: #f8fbff;
+    --color-text-muted: #9aa7c1;
+    --color-text-subtle: #6f7a91;
+
+    --grad-primary: linear-gradient(120deg, #00aeef 0%, #29c6cd 60%, #00d9ff 100%);
+    --grad-primary-accent: linear-gradient(120deg, #00aeef 0%, #29c6cd 50%, #ffd200 100%);
+    --grad-accent: linear-gradient(120deg, #ffd200 0%, #f4e04d 100%);
+
+    --glow-primary: 0 0 30px rgba(0, 174, 239, 0.28);
+    --glow-accent: 0 0 20px rgba(255, 210, 0, 0.38);
+
+    --radius-md: 10px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-display: 'Orbitron', 'Inter', sans-serif;
+}
 
 @layer base {
     :root {
@@ -12,6 +46,10 @@
         --color-neon-cyan: #00f5ff;
         --color-neon-lime: #b5ff00;
         --color-neon-yellow: #fff200;
+        /* Okunabilirlik için ideal satır aralıkları */
+        --line-height-body: 1.6;
+        --line-height-heading: 1.25;
+        --max-content-width: 1200px;
     }
 
     .dark {
@@ -19,12 +57,76 @@
         --color-foreground: 248 250 252;
     }
 
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Optimize edilmiş tipografi hiyerarşisi */
+    html {
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        scroll-behavior: smooth;
+    }
+
     body {
-        @apply bg-gradient-to-br from-surface-50 via-primary-50/30 to-surface-100 dark:from-surface-950 dark:via-surface-900 dark:to-surface-950;
-        @apply text-surface-900 dark:text-surface-50;
-        @apply transition-colors duration-300;
+        @apply bg-[#0f0f0f] text-[#f8fbff];
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-image:
+            radial-gradient(circle at 20% 20%, rgba(0, 174, 239, 0.06), transparent 32%),
+            radial-gradient(circle at 80% 0%, rgba(255, 210, 0, 0.08), transparent 26%),
+            linear-gradient(115deg, rgba(0, 174, 239, 0.05) 0%, rgba(0, 0, 0, 0) 30%),
+            linear-gradient(245deg, rgba(41, 198, 205, 0.04) 0%, rgba(0, 0, 0, 0) 45%),
+            linear-gradient(0deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 24px 24px, 24px 24px;
+        background-position: center;
         @apply antialiased;
         @apply min-h-screen;
+        line-height: var(--line-height-body);
+    }
+
+    /* Light mode override for body */
+    body:not(.dark-mode) {
+        /* Light mode styles are opt-in now */
+    }
+
+    /* Tipografi hiyerarşisi - Başlıklar */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        line-height: var(--line-height-heading);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+
+    h1 {
+        @apply text-3xl md:text-4xl;
+    }
+
+    h2 {
+        @apply text-2xl md:text-3xl;
+    }
+
+    h3 {
+        @apply text-xl md:text-2xl;
+    }
+
+    h4 {
+        @apply text-lg md:text-xl;
+    }
+
+    /* Paragraf okunabilirliği */
+    p {
+        max-width: 70ch;
+        /* Optimal okuma genişliği */
+        line-height: 1.7;
     }
 
     /* Safe area for mobile */
@@ -35,12 +137,19 @@
 
 @layer components {
 
+    /* ========== Erişilebilirlik - Dokunmatik Hedefler ========== */
+    /* WCAG 2.1 - Minimum 44x44px dokunmatik alan */
+
     /* ========== Buttons ========== */
     .btn {
-        @apply inline-flex items-center justify-center px-4 py-2.5 rounded-2xl font-medium transition-all duration-200;
+        @apply inline-flex items-center justify-center px-4 py-2.5 rounded-2xl font-medium transition-all duration-150;
         @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500;
         @apply disabled:opacity-50 disabled:cursor-not-allowed;
         @apply active:scale-[0.98];
+        /* Minimum dokunmatik alan - 44px */
+        min-height: 44px;
+        min-width: 44px;
+        will-change: transform;
     }
 
     .btn-primary {
@@ -79,9 +188,14 @@
     }
 
     .btn-icon {
-        @apply p-2.5 rounded-2xl transition-all duration-200;
+        @apply p-2.5 rounded-2xl transition-all duration-150;
         @apply hover:bg-primary-100/50 dark:hover:bg-primary-900/30;
         @apply active:scale-95;
+        /* Minimum dokunmatik alan - 44px */
+        min-height: 44px;
+        min-width: 44px;
+        @apply flex items-center justify-center;
+        will-change: transform;
     }
 
     /* ========== Cards ========== */
@@ -89,7 +203,8 @@
         @apply bg-white/80 dark:bg-surface-800/60 rounded-3xl shadow-sm;
         @apply border border-primary-200/40 dark:border-primary-800/30;
         @apply backdrop-blur-md;
-        @apply transition-all duration-300;
+        @apply transition-all duration-200;
+        will-change: transform;
     }
 
     .card-hover {
@@ -130,7 +245,8 @@
         @apply bg-white/80 dark:bg-surface-800/60 text-surface-900 dark:text-surface-100;
         @apply placeholder:text-surface-400 dark:placeholder:text-surface-500;
         @apply focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent;
-        @apply backdrop-blur-sm transition-all duration-200;
+        @apply backdrop-blur-sm transition-all duration-150;
+        will-change: border-color, box-shadow;
     }
 
     .input-sm {
@@ -185,7 +301,8 @@
     /* ========== Skeleton Loading ========== */
     .skeleton {
         @apply bg-gradient-to-r from-surface-200 via-surface-100 to-surface-200 dark:from-surface-700 dark:via-surface-600 dark:to-surface-700 rounded-xl;
-        @apply animate-pulse bg-[length:200%_100%];
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite linear;
     }
 
     /* ========== Badges ========== */
@@ -213,15 +330,44 @@
         @apply backdrop-blur-sm;
     }
 
-    /* ========== Modal ========== */
+    /* ========== Modal - Ultra Performance ========== */
     .modal-backdrop {
-        @apply fixed inset-0 bg-surface-900/40 backdrop-blur-md flex items-center justify-center z-50;
+        @apply fixed inset-0 bg-surface-900/70 flex items-center justify-center z-50;
         @apply animate-fade-in;
+        will-change: opacity;
+        contain: layout style paint;
+        /* Mobil safe-area desteği */
+        padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 16px);
     }
 
     .modal-content {
         @apply card p-6 w-full max-w-md mx-4;
         @apply animate-scale-in border-primary-300/50 dark:border-primary-700/40;
+        @apply max-h-[90vh] overflow-y-auto;
+        @apply shadow-2xl;
+        will-change: transform, opacity;
+        transform: translateZ(0);
+        contain: layout style paint;
+        backface-visibility: hidden;
+        /* Mobil için scroll desteği */
+        overscroll-behavior: contain;
+    }
+
+    .modal-body {
+        @apply text-surface-700 dark:text-surface-300;
+        line-height: 1.6;
+    }
+
+    .modal-footer {
+        @apply flex flex-wrap gap-3 justify-end;
+    }
+
+    /* Modal boyut responsive ayarları */
+    @media (max-width: 640px) {
+        .modal-content {
+            @apply mx-2 p-4;
+            max-height: 85vh;
+        }
     }
 
     /* ========== FAB ========== */
@@ -378,52 +524,179 @@
     .animation-delay-2000 {
         animation-delay: 2000ms;
     }
+
+    /* ========== Responsive Grid Layouts ========== */
+    /* Otomatik responsive grid - içerik miktarına göre uyum */
+    .grid-auto-fit {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+        gap: 1rem;
+    }
+
+    .grid-auto-fill {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+        gap: 1rem;
+    }
+
+    /* Dashboard kartları için responsive grid */
+    .grid-dashboard {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 640px) {
+        .grid-dashboard {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .grid-dashboard {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .grid-dashboard {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    /* Stat kartları için compact grid */
+    .grid-stats {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 768px) {
+        .grid-stats {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+    }
+
+    /* ========== Mobil Optimizasyonları ========== */
+    /* Safe area için padding */
+    .safe-padding-bottom {
+        padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+    }
+
+    .safe-padding-top {
+        padding-top: max(env(safe-area-inset-top, 0px), 0.5rem);
+    }
+
+    /* Touch-friendly link ve butonlar */
+    .touch-target {
+        position: relative;
+    }
+
+    .touch-target::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        min-width: 44px;
+        min-height: 44px;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Mobil için stack layout */
+    .stack-mobile {
+        @apply flex flex-col gap-4;
+    }
+
+    @media (min-width: 768px) {
+        .stack-mobile {
+            @apply flex-row items-center;
+        }
+    }
+
+    /* Container - max-width ile sınırlandırılmış */
+    .container-narrow {
+        @apply w-full mx-auto px-4;
+        max-width: 768px;
+    }
+
+    .container-wide {
+        @apply w-full mx-auto px-4 lg:px-6;
+        max-width: 1200px;
+    }
+
+    .container-full {
+        @apply w-full mx-auto px-4 lg:px-8;
+        max-width: 1440px;
+    }
 }
 
-/* ========== Keyframe Animations ========== */
+/* ========== Keyframe Animations - Optimized ========== */
 @keyframes fade-in {
     from {
         opacity: 0;
+        transform: translateZ(0);
     }
 
     to {
         opacity: 1;
+        transform: translateZ(0);
     }
 }
 
 @keyframes scale-in {
     from {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.98) translateZ(0);
     }
 
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateZ(0);
     }
+}
+
+/* FAB Animasyonu */
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 0.3s ease-out forwards;
 }
 
 @keyframes slide-up {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(8px) translateZ(0);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
 }
 
 @keyframes slide-down {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(-8px) translateZ(0);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
 }
 
@@ -505,21 +778,143 @@
     }
 }
 
-/* Animation utility classes */
+@keyframes shimmer {
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
+}
+
+/* ==================== PLANNER MODULE CSS VARIABLES ==================== */
+/* PLAN.EX integration styles - scoped to planner */
+.planner-module {
+    --planex-color-bg-primary: var(--color-background);
+    --planex-color-bg-secondary: rgb(248 250 252);
+    --planex-color-bg-tertiary: rgb(241 245 249);
+    --planex-color-bg-card: white;
+    --planex-color-bg-hover: rgb(241 245 249);
+    --planex-color-text-primary: rgb(15 23 42);
+    --planex-color-text-secondary: rgb(71 85 105);
+    --planex-color-text-tertiary: rgb(148 163 184);
+    --planex-color-border: rgb(226 232 240);
+    --planex-color-border-hover: rgb(203 213 225);
+    --planex-color-accent: rgb(99 102 241);
+    --planex-color-accent-hover: rgb(79 70 229);
+    --planex-color-accent-light: rgb(238 242 255);
+    --planex-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --planex-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.dark .planner-module {
+    --planex-color-bg-primary: rgb(15 23 42);
+    --planex-color-bg-secondary: rgb(30 41 59);
+    --planex-color-bg-tertiary: rgb(51 65 85);
+    --planex-color-bg-card: rgb(30 41 59);
+    --planex-color-bg-hover: rgb(51 65 85);
+    --planex-color-text-primary: rgb(248 250 252);
+    --planex-color-text-secondary: rgb(203 213 225);
+    --planex-color-text-tertiary: rgb(100 116 139);
+    --planex-color-border: rgb(51 65 85);
+    --planex-color-border-hover: rgb(71 85 105);
+    --planex-color-accent: rgb(129 140 248);
+    --planex-color-accent-hover: rgb(99 102 241);
+    --planex-color-accent-light: rgb(30 27 75);
+}
+
+/* Planner Utility Classes */
+.planner-module .bg-card {
+    background-color: var(--planex-color-bg-card);
+}
+
+.planner-module .bg-primary {
+    background-color: var(--planex-color-bg-primary);
+}
+
+.planner-module .bg-secondary {
+    background-color: var(--planex-color-bg-secondary);
+}
+
+.planner-module .text-primary {
+    color: var(--planex-color-text-primary);
+}
+
+.planner-module .text-secondary {
+    color: var(--planex-color-text-secondary);
+}
+
+.planner-module .text-tertiary {
+    color: var(--planex-color-text-tertiary);
+}
+
+.planner-module .border-default {
+    border-color: var(--planex-color-border);
+}
+
+.planner-module .shadow-card {
+    box-shadow: var(--planex-shadow-md);
+}
+
+.planner-module .gradient-primary {
+    background: linear-gradient(135deg, var(--planex-color-accent) 0%, #8b5cf6 100%);
+}
+
+/* Planner Heatmap Colors */
+.planner-module .heatmap-empty {
+    background-color: var(--planex-color-bg-tertiary);
+}
+
+.planner-module .heatmap-level-1 {
+    background-color: #c6e48b;
+}
+
+.planner-module .heatmap-level-2 {
+    background-color: #7bc96f;
+}
+
+.planner-module .heatmap-level-3 {
+    background-color: #449d44;
+}
+
+.planner-module .heatmap-level-4 {
+    background-color: #196127;
+}
+
+.dark .planner-module .heatmap-level-1 {
+    background-color: #0e4429;
+}
+
+.dark .planner-module .heatmap-level-2 {
+    background-color: #006d32;
+}
+
+.dark .planner-module .heatmap-level-3 {
+    background-color: #26a641;
+}
+
+.dark .planner-module .heatmap-level-4 {
+    background-color: #39d353;
+}
+
+/* ==================== END PLANNER MODULE CSS ==================== */
+
+/* Animation utility classes - Ultra Fast */
 .animate-fade-in {
-    animation: fade-in 0.2s ease-out;
+    animation: fade-in 0.1s ease-out;
 }
 
 .animate-scale-in {
-    animation: scale-in 0.2s ease-out;
+    animation: scale-in 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .animate-slide-up {
-    animation: slide-up 0.3s ease-out;
+    animation: slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .animate-slide-down {
-    animation: slide-down 0.3s ease-out;
+    animation: slide-down 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .animate-bounce-small {
@@ -544,4 +939,263 @@
 
 .animate-shake {
     animation: shake 0.3s ease-in-out;
+}
+
+/* ========== PLAN.EX Planner Module Styles ========== */
+/* CSS Variables for PLAN.EX theming - scoped globally for planner module */
+
+:root {
+    /* PLAN.EX Light Theme Variables */
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f8fafc;
+    --color-bg-tertiary: #f1f5f9;
+    --color-bg-card: #ffffff;
+    --color-bg-hover: #f1f5f9;
+
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-tertiary: #94a3b8;
+    --color-text-inverse: #ffffff;
+
+    --color-border: #e2e8f0;
+    --color-border-hover: #cbd5e1;
+
+    --color-accent: #6366f1;
+    --color-accent-hover: #4f46e5;
+    --color-accent-light: #eef2ff;
+
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+    --color-info: #3b82f6;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.dark {
+    /* PLAN.EX Dark Theme Variables */
+    --color-bg-primary: #0f172a;
+    --color-bg-secondary: #1e293b;
+    --color-bg-tertiary: #334155;
+    --color-bg-card: #1e293b;
+    --color-bg-hover: #334155;
+
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-text-tertiary: #64748b;
+    --color-text-inverse: #0f172a;
+
+    --color-border: #334155;
+    --color-border-hover: #475569;
+
+    --color-accent: #818cf8;
+    --color-accent-hover: #6366f1;
+    --color-accent-light: #1e1b4b;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+}
+
+/* PLAN.EX Utility Classes */
+.bg-card {
+    background-color: var(--color-bg-card);
+}
+
+.bg-primary {
+    background-color: var(--color-bg-primary);
+}
+
+.bg-secondary {
+    background-color: var(--color-bg-secondary);
+}
+
+.text-primary {
+    color: var(--color-text-primary);
+}
+
+.text-secondary {
+    color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+    color: var(--color-text-tertiary);
+}
+
+.border-default {
+    border-color: var(--color-border);
+}
+
+/* ========== Plan.Ex Dark-Tech Components ========== */
+
+/* Custom Scrollbar - Dark */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(154, 167, 193, 0.25);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(154, 167, 193, 0.45);
+}
+
+/* Glass Panel - Dark Tech */
+.glass-panel {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+    border: 1px solid var(--color-stroke);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 18px 40px var(--color-shadow);
+}
+
+/* Card Tech - Dark Theme */
+.card-tech {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.02), rgba(0, 174, 239, 0.03));
+    border: 1px solid var(--color-stroke);
+    box-shadow: 0 16px 36px var(--color-shadow);
+    transition: border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.card-tech:hover {
+    border-color: rgba(0, 174, 239, 0.5);
+    box-shadow: var(--glow-primary);
+    transform: translateY(-2px);
+}
+
+/* Brand Logo - Orbitron */
+.brand-logo {
+    font-family: var(--font-display);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.brand-gradient {
+    background: var(--grad-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.brand-accent {
+    color: var(--color-accent);
+}
+
+/* CTA Outline Button - Gradient Border */
+.btn-cta-outline {
+    position: relative;
+    isolation: isolate;
+    padding: 0.9rem 1.4rem;
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    background: transparent;
+    border: 1px solid transparent;
+    font-weight: 600;
+    transition: box-shadow 150ms ease, color 150ms ease;
+}
+
+.btn-cta-outline::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--grad-primary-accent);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: -1;
+}
+
+.btn-cta-outline:hover {
+    box-shadow: var(--glow-primary);
+    color: #fff;
+}
+
+/* Circuit Background Pattern */
+.bg-circuit {
+    position: relative;
+    isolation: isolate;
+}
+
+.bg-circuit::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.3;
+    background-image:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        radial-gradient(circle at 20% 30%, rgba(0, 174, 239, 0.12), transparent 28%),
+        radial-gradient(circle at 80% 10%, rgba(255, 210, 0, 0.12), transparent 26%);
+    background-size: 42px 42px, 42px 42px, 100% 100%, 100% 100%;
+    mix-blend-mode: screen;
+}
+
+/* Shadow Glow Small */
+.shadow-glow-sm {
+    box-shadow: 0 0 12px rgba(0, 174, 239, 0.25);
+}
+
+.shadow-card {
+    box-shadow: var(--shadow-md);
+}
+
+.gradient-primary {
+    background: linear-gradient(135deg, var(--color-accent) 0%, #8b5cf6 100%);
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

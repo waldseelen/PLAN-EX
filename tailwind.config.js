@@ -8,6 +8,30 @@ export default {
     theme: {
         extend: {
             colors: {
+                // Plan.Ex Dark-Tech Theme (TO-DO merged)
+                background: '#0f0f0f',
+                'surface-dark': '#13131a',
+                'surface-elevated': '#181c24',
+                'surface-muted': '#1f2430',
+
+                // Electric Cyan - Primary
+                'brand-primary': '#00AEEF',
+                'brand-primary-alt': '#29C6CD',
+
+                // Gold - Accent
+                'brand-accent': '#FFD200',
+                'brand-accent-alt': '#F4E04D',
+
+                // Text colors for dark theme
+                'text-main': '#F8FBFF',
+                'text-muted': '#9AA7C1',
+                'text-subtle': '#6F7A91',
+
+                // Glass/Stroke effects
+                glass: 'rgba(255, 255, 255, 0.06)',
+                stroke: 'rgba(255, 255, 255, 0.08)',
+                glow: 'rgba(0, 174, 239, 0.35)',
+
                 // Turkuaz - Primary (Ana Tema)
                 primary: {
                     50: '#ecfeff',
@@ -141,12 +165,20 @@ export default {
             },
             boxShadow: {
                 'glow': '0 0 20px rgba(6, 182, 212, 0.4)',
+                'glow-sm': '0 0 12px rgba(0, 174, 239, 0.25)',
+                'glow-primary': '0 0 24px rgba(0, 174, 239, 0.35)',
+                'glow-accent': '0 0 20px rgba(255, 210, 0, 0.38)',
                 'glow-success': '0 0 20px rgba(34, 197, 94, 0.4)',
                 'glow-timer': '0 0 20px rgba(245, 158, 11, 0.4)',
-                'glow-accent': '0 0 20px rgba(163, 230, 53, 0.4)',
+                'card': '0 18px 40px rgba(0, 0, 0, 0.45)',
                 'neon': '0 0 5px theme("colors.neon.cyan"), 0 0 20px theme("colors.neon.cyan"), 0 0 40px theme("colors.neon.cyan")',
                 'neon-lime': '0 0 5px theme("colors.neon.lime"), 0 0 20px theme("colors.neon.lime"), 0 0 40px theme("colors.neon.lime")',
                 'neon-yellow': '0 0 5px theme("colors.neon.yellow"), 0 0 20px theme("colors.neon.yellow")',
+            },
+            fontFamily: {
+                sans: ['Inter', 'system-ui', 'sans-serif'],
+                mono: ['JetBrains Mono', 'Roboto Mono', 'monospace'],
+                display: ['Orbitron', 'Inter', 'sans-serif'],
             },
         },
     },

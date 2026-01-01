@@ -19,7 +19,7 @@ export function useDocumentTitle({
     timerSeconds,
     activityName,
     isRunning = false,
-    defaultTitle = 'LifeFlow - Yaşam Akışı',
+    defaultTitle = 'Plan.Ex - Akıllı Planlama',
 }: UseDocumentTitleOptions = {}) {
     const originalTitle = useRef(document.title)
 

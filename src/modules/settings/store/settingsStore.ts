@@ -13,6 +13,15 @@ interface SettingsState {
     mergeThresholdMinutes: number
     defaultPomodoroConfigId: string | null
 
+    // Pomodoro settings
+    pomodoroWorkDuration: number // in minutes
+    pomodoroBreakDuration: number // in minutes
+    pomodoroLongBreakDuration: number // in minutes
+    pomodoroSessionsBeforeLongBreak: number
+    pomodoroAutoStartBreak: boolean
+    pomodoroAutoStartWork: boolean
+    pomodoroSoundEnabled: boolean
+
     // State
     isLoading: boolean
     isInitialized: boolean
@@ -23,6 +32,7 @@ interface SettingsState {
     getSetting: <K extends SettingKey>(key: K) => Setting['value'] | undefined
     setRolloverHour: (hour: number) => Promise<void>
     setWeekStart: (day: 1 | 7) => Promise<void>
+    setPomodoroSetting: (key: string, value: number | boolean) => void
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -34,6 +44,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     multitaskingEnabled: false,
     mergeThresholdMinutes: 5,
     defaultPomodoroConfigId: null,
+
+    // Pomodoro defaults
+    pomodoroWorkDuration: 25,
+    pomodoroBreakDuration: 5,
+    pomodoroLongBreakDuration: 15,
+    pomodoroSessionsBeforeLongBreak: 4,
+    pomodoroAutoStartBreak: false,
+    pomodoroAutoStartWork: false,
+    pomodoroSoundEnabled: true,
 
     isLoading: true,
     isInitialized: false,
@@ -47,6 +66,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
                 settingsMap.set(s.key, s.value)
             })
 
+            // Load Pomodoro settings from localStorage
+            const pomodoroSettings = JSON.parse(localStorage.getItem('pomodoroSettings') || '{}')
+
             set({
                 rolloverHour: (settingsMap.get('rolloverHour') as number) ?? 4,
                 weekStart: (settingsMap.get('weekStart') as 1 | 7) ?? 1,
@@ -55,6 +77,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
                 multitaskingEnabled: (settingsMap.get('multitaskingEnabled') as boolean) ?? false,
                 mergeThresholdMinutes: (settingsMap.get('mergeThresholdMinutes') as number) ?? 5,
                 defaultPomodoroConfigId: (settingsMap.get('defaultPomodoroConfigId') as string) ?? null,
+                // Pomodoro settings from localStorage
+                pomodoroWorkDuration: pomodoroSettings.workDuration ?? 25,
+                pomodoroBreakDuration: pomodoroSettings.breakDuration ?? 5,
+                pomodoroLongBreakDuration: pomodoroSettings.longBreakDuration ?? 15,
+                pomodoroSessionsBeforeLongBreak: pomodoroSettings.sessionsBeforeLongBreak ?? 4,
+                pomodoroAutoStartBreak: pomodoroSettings.autoStartBreak ?? false,
+                pomodoroAutoStartWork: pomodoroSettings.autoStartWork ?? false,
+                pomodoroSoundEnabled: pomodoroSettings.soundEnabled ?? true,
                 isLoading: false,
                 isInitialized: true,
             })
@@ -115,6 +145,27 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             })
         } catch (error) {
             console.error('Failed to update weekStart:', error)
+        }
+    },
+
+    setPomodoroSetting: (key, value) => {
+        // Update state
+        set({ [key]: value } as Partial<SettingsState>)
+
+        // Persist to localStorage
+        const current = JSON.parse(localStorage.getItem('pomodoroSettings') || '{}')
+        const keyMap: Record<string, string> = {
+            pomodoroWorkDuration: 'workDuration',
+            pomodoroBreakDuration: 'breakDuration',
+            pomodoroLongBreakDuration: 'longBreakDuration',
+            pomodoroSessionsBeforeLongBreak: 'sessionsBeforeLongBreak',
+            pomodoroAutoStartBreak: 'autoStartBreak',
+            pomodoroAutoStartWork: 'autoStartWork',
+            pomodoroSoundEnabled: 'soundEnabled',
+        }
+        if (keyMap[key]) {
+            current[keyMap[key]] = value
+            localStorage.setItem('pomodoroSettings', JSON.stringify(current))
         }
     },
 }))
