@@ -170,7 +170,7 @@ export function OverviewPage() {
                         <CardHeader
                             title="Ders İlerlemesi"
                             action={
-                                <Link to="/planner/courses">
+                                <Link to="/courses">
                                     <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
                                         Tümü
                                     </Button>
@@ -182,7 +182,7 @@ export function OverviewPage() {
                             <div className="text-center py-8">
                                 <BookOpen className="w-12 h-12 text-tertiary mx-auto mb-3" />
                                 <p className="text-secondary">Henüz ders eklenmemiş</p>
-                                <Link to="/planner/courses">
+                                <Link to="/courses">
                                     <Button variant="primary" size="sm" className="mt-3">
                                         Ders Ekle
                                     </Button>
@@ -191,7 +191,7 @@ export function OverviewPage() {
                         ) : (
                             <div className="space-y-4">
                                 {courseProgress.slice(0, 4).map(({ course, total, completed, percentage }) => (
-                                    <Link key={course.id} to={`/planner/courses/${course.id}`}>
+                                    <Link key={course.id} to={`/courses/${course.id}`}>
                                         <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary transition-colors">
                                             <div
                                                 className="w-3 h-3 rounded-full flex-shrink-0"
@@ -216,7 +216,7 @@ export function OverviewPage() {
                         <CardHeader
                             title="Yaklaşan Sınavlar"
                             action={
-                                <Link to="/planner/calendar">
+                                <Link to="/calendar">
                                     <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
                                         Takvim
                                     </Button>
@@ -265,7 +265,7 @@ export function OverviewPage() {
                         <CardHeader
                             title="Bugünkü Alışkanlıklar"
                             action={
-                                <Link to="/planner/habits">
+                                <Link to="/habits">
                                     <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
                                         Tümü
                                     </Button>
@@ -277,7 +277,7 @@ export function OverviewPage() {
                             <div className="text-center py-8">
                                 <Target className="w-12 h-12 text-tertiary mx-auto mb-3" />
                                 <p className="text-secondary">Bugün için alışkanlık yok</p>
-                                <Link to="/planner/habits">
+                                <Link to="/habits">
                                     <Button variant="primary" size="sm" className="mt-3">
                                         Alışkanlık Ekle
                                     </Button>
@@ -286,7 +286,7 @@ export function OverviewPage() {
                         ) : (
                             <div className="space-y-3">
                                 {todayHabits.slice(0, 4).map(({ habit, isCompletedToday, score }) => (
-                                    <Link key={habit.id} to={`/planner/habits/${habit.id}`}>
+                                    <Link key={habit.id} to={`/habits/${habit.id}`}>
                                         <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary transition-colors">
                                             <div
                                                 className={cn(

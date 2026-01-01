@@ -275,7 +275,7 @@ export function HabitsDashboardPage() {
 
                                             <div className="flex-1 min-w-0">
                                                 <Link
-                                                    to={`/planner/habits/${habit.habit.id}`}
+                                                    to={`/habits/${habit.habit.id}`}
                                                     className="flex items-center gap-2 group"
                                                 >
                                                     <span className="text-xl">{habit.habit.emoji}</span>

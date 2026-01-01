@@ -1,7 +1,7 @@
-import { FocusModeProvider, OfflineIndicator, PrivacyToggle, ScrollToTop, SmartFab, ToastProvider } from '@/shared/components'
+import { CreateTypeModal, FocusModeProvider, OfflineIndicator, PrivacyToggle, ScrollToTop, SmartFab, ToastProvider, type CreateType } from '@/shared/components'
 import { useDocumentTitle, useDynamicFavicon, useKeyboardShortcuts } from '@/shared/hooks'
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery'
-import { CheckCircleIcon, ClockIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { BookOpenIcon, CalendarIcon, CheckCircleIcon, DocumentTextIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { useCallback, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNavigation } from '../components/BottomNavigation'
@@ -17,6 +17,7 @@ export function AppLayout() {
     const location = useLocation()
     const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
     // Dynamic document title
     useDocumentTitle({
@@ -35,8 +36,8 @@ export function AppLayout() {
     }, [navigate])
 
     const handleNewRecord = useCallback(() => {
-        navigate('/habits')
-    }, [navigate])
+        setIsCreateModalOpen(true)
+    }, [])
 
     const handleOpenSettings = useCallback(() => {
         navigate('/settings')
@@ -51,25 +52,48 @@ export function AppLayout() {
         enabled: isDesktop,
     })
 
-    // Smart FAB actions
+    // Smart FAB actions - FAB click opens the create type modal
+    const handleCreateTypeSelect = useCallback((type: CreateType) => {
+        switch (type) {
+            case 'task':
+                navigate('/tasks')
+                break
+            case 'habit':
+                navigate('/habits')
+                break
+            case 'course':
+                navigate('/courses')
+                break
+            case 'event':
+                navigate('/calendar')
+                break
+        }
+    }, [navigate])
+
     const fabActions = useMemo(() => [
         {
-            icon: <ClockIcon className="w-5 h-5" />,
-            label: 'Hızlı Timer',
-            onClick: () => navigate('/'),
+            icon: <DocumentTextIcon className="w-5 h-5" />,
+            label: 'Görev Ekle',
+            onClick: () => navigate('/tasks'),
+            variant: 'default' as const,
+        },
+        {
+            icon: <BookOpenIcon className="w-5 h-5" />,
+            label: 'Ders Ekle',
+            onClick: () => navigate('/courses'),
             variant: 'default' as const,
         },
         {
             icon: <CheckCircleIcon className="w-5 h-5" />,
-            label: 'Habit Ekle',
+            label: 'Alışkanlık Ekle',
             onClick: () => navigate('/habits'),
             variant: 'success' as const,
         },
         {
-            icon: <PencilIcon className="w-5 h-5" />,
-            label: 'Manuel Kayıt',
-            onClick: () => navigate('/activities'),
-            variant: 'default' as const,
+            icon: <CalendarIcon className="w-5 h-5" />,
+            label: 'Etkinlik/Sınav',
+            onClick: () => navigate('/calendar'),
+            variant: 'warning' as const,
         },
     ], [navigate])
 
@@ -77,6 +101,11 @@ export function AppLayout() {
         <ToastProvider>
             <FocusModeProvider>
                 <ScrollToTop />
+                <CreateTypeModal
+                    isOpen={isCreateModalOpen}
+                    onClose={() => setIsCreateModalOpen(false)}
+                    onSelect={handleCreateTypeSelect}
+                />
                 <div className="flex h-screen w-full overflow-hidden bg-[#0f0f0f]">
                     {/* Desktop Sidebar */}
                     {(isDesktop || isTablet) && <Sidebar collapsed={isTablet} />}
@@ -121,9 +150,10 @@ export function AppLayout() {
                     {/* Smart FAB for Desktop */}
                     {isDesktop && (
                         <SmartFab
-                            onPrimaryAction={() => navigate('/')}
+                            onPrimaryAction={() => setIsCreateModalOpen(true)}
                             secondaryActions={fabActions}
                             position="bottom-right"
+                            icon={<PlusIcon className="w-7 h-7" />}
                         />
                     )}
                 </div>

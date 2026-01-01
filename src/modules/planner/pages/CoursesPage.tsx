@@ -139,7 +139,7 @@ export function CoursesPage() {
                                             </div>
                                         </div>
 
-                                        <Link to={`/planner/courses/${course.id}`}>
+                                        <Link to={`/courses/${course.id}`}>
                                             {/* Color Bar */}
                                             <div
                                                 className="h-2 rounded-t-lg -mx-4 -mt-4 mb-4"

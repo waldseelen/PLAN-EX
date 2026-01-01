@@ -108,7 +108,7 @@ export function CourseDetailPage() {
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-center">
                     <p className="text-secondary mb-4">Ders bulunamadı</p>
-                    <Link to="/planner/courses">
+                    <Link to="/courses">
                         <Button>Derslere Dön</Button>
                     </Link>
                 </div>
@@ -274,7 +274,7 @@ export function CourseDetailPage() {
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
             <div className="flex items-start gap-4">
-                <Button variant="ghost" onClick={() => navigate('/planner/courses')}>
+                <Button variant="ghost" onClick={() => navigate('/courses')}>
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div className="flex-1">

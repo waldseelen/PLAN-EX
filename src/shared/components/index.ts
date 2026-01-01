@@ -1,4 +1,5 @@
 export { ConfirmDialog } from './ConfirmDialog'
+export { CreateTypeModal, type CreateType } from './CreateTypeModal'
 export { EmptyState } from './EmptyState'
 export { ErrorBoundary, GlobalErrorBoundary, PageErrorBoundary, WidgetErrorBoundary } from './ErrorBoundary'
 export { Modal } from './Modal'
@@ -9,7 +10,7 @@ export { Skeleton, SkeletonActivityCard, SkeletonCard, SkeletonHabitCard, Skelet
 
 // New UX Components
 export { AnimatedCheckbox, LoadingDots, StreakBadge, SuccessAnimation } from './Animations'
-export { CategoryBadge, CategoryBorder, CategoryColorPicker, CategoryDot, categoryColors, getCategoryColorStyles, type CategoryColorKey } from './CategoryColors'
+export { CategoryBadge, CategoryBorder, CategoryColorPicker, categoryColors, CategoryDot, getCategoryColorStyles, type CategoryColorKey } from './CategoryColors'
 export { DatePicker, DateRangePicker } from './DateRangePicker'
 export { EmptyActivities, EmptyHabits, EmptySearchResults, EmptySessions, EmptyStats, EnhancedEmptyState } from './EnhancedEmptyState'
 export { FocusBlurWrapper, FocusModeOverlay, FocusModeProvider, FocusModeToggle, FocusTimerDisplay, useFocusMode } from './FocusMode'
@@ -18,7 +19,7 @@ export { OfflineIndicator } from './OfflineIndicator'
 export { PrivacyBlur, PrivacyProvider, PrivacyToggle, usePrivacyMode } from './PrivacyMode'
 export { PWAInstallBanner } from './PWAInstallBanner'
 export { ScrollToTop } from './ScrollToTop'
-export { SmartFab, defaultFabActions } from './SmartFab'
+export { defaultFabActions, SmartFab } from './SmartFab'
 export { SwipeableItem, SwipeableList } from './SwipeableItem'
 export { CompactTimeline, Timeline } from './Timeline'
 export { ToastProvider, useToast } from './Toast'

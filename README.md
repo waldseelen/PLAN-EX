@@ -16,8 +16,9 @@ Görevlerinizi, derslerinizi ve günlük planınızı tek bir dark-mode deneyimi
 ### 📖 Ders & Kurs Yönetimi
 - Ders ekleme ve düzenleme
 - Ünite ve görev takibi
-- Sınav takvimi
-- İlerleme çubukları
+- Sınav takvimi ve geri sayım (kalan gün göstergesi)
+- Her ders için ilerleme çubukları
+- Sınav tarihleri renk kodlu (acil: kırmızı, yaklaşan: turuncu)
 
 ### ✅ Alışkanlık Takibi
 - Günlük alışkanlık yönetimi
@@ -27,7 +28,8 @@ Görevlerinizi, derslerinizi ve günlük planınızı tek bir dark-mode deneyimi
 
 ### 📅 Birleşik Takvim
 - Tüm etkinlikleri tek ekranda görün
-- Sınavlar, görevler, alışkanlıklar
+- Sınav tarihlerine kalan günler
+- Etkinlikleri düzenleme ve silme
 - Renk kodlu kategoriler
 
 ### ⏱️ Pomodoro Timer
@@ -47,10 +49,20 @@ Görevlerinizi, derslerinizi ve günlük planınızı tek bir dark-mode deneyimi
 - Responsive 3 kolonlu layout
 - Animasyonlu geçişler
 
+### ✨ Akıllı Oluştur (+) Butonu
+- Sağ altta yuvarlak FAB (Floating Action Button)
+- Basma: Ne oluşturmak istediğinizi soran modal açılır
+  - Görev
+  - Alışkanlık
+  - Ders
+  - Etkinlik / Sınav
+- Uzun basma: Hızlı menü (Görev Ekle, Ders Ekle, Alışkanlık Ekle, Etkinlik/Sınav)
+
 ### ⚙️ Ayarlar
 - Koyu tema varsayılan
 - Veri yedekleme (Export/Import)
 - Gizlilik modu
+- Arayüz kişileştirme
 
 ## 🚀 Başlangıç
 
@@ -139,16 +151,16 @@ src/
 
 | Ekran | Yol | Açıklama |
 |-------|-----|----------|
-| Ana Sayfa | `/` | Dashboard özeti |
-| Dersler | `/courses` | Ders listesi |
-| Ders Detay | `/courses/:id` | Ünite ve görevler |
-| Takvim | `/calendar` | Birleşik takvim |
-| Görevler | `/tasks` | Kişisel görevler |
+| Ana Sayfa | `/` | Dashboard özeti, devam eden etkinlikler |
+| Dersler | `/courses` | Tüm dersler listesi, hızlı erişim |
+| Ders Detay | `/courses/:id` | Üniteler, görevler, sınavlar, ders notları |
+| Takvim | `/calendar` | Birleşik etkinlik takvimi (sınav + etkinlik) |
+| Görevler | `/tasks` | Tüm kişisel görevler listesi |
 | Alışkanlıklar | `/habits` | Alışkanlık listesi |
-| Alışkanlık Detay | `/habits/:id` | Detaylı istatistik |
-| Pomodoro | `/productivity` | Timer |
-| İstatistikler | `/statistics` | Grafikler |
-| Ayarlar | `/settings` | Tercihler |
+| Alışkanlık Detay | `/habits/:id` | Detaylı istatistik, heatmap |
+| Pomodoro | `/productivity` | Pomodoro timer ve session geçmişi |
+| İstatistikler | `/statistics` | Çalışma, alışkanlık ve ders grafikleri |
+| Ayarlar | `/settings` | Tercihler, yedekleme, gizlilik |
 
 ## 🛠️ Tech Stack
 
