@@ -13,6 +13,7 @@ import { Sidebar } from '../components/SidebarNew'
 
 export function AppLayout() {
     const isDesktop = useMediaQuery('(min-width: 1280px)')
+    const isWide = useMediaQuery('(min-width: 1024px)')
     const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1279px)')
     const isMobile = useMediaQuery('(max-width: 767px)')
     const navigate = useNavigate()
@@ -23,7 +24,7 @@ export function AppLayout() {
     const [isSearchFocused, setIsSearchFocused] = useState(false)
 
     // Backup uyarısı kontrolü
-    const { checkBackupWarning, backupWarning } = usePlannerAppStore()
+    const { checkBackupWarning, backupWarning, setBackupWarning, updateSettings } = usePlannerAppStore()
     const { showToast } = useToast()
 
     // App başlangıcında backup uyarısını kontrol et
@@ -38,8 +39,10 @@ export function AppLayout() {
                 variant: 'warning',
                 duration: 8000,
             })
+            updateSettings({ lastBackupWarningISO: new Date().toISOString() })
+            setBackupWarning(false)
         }
-    }, [backupWarning, showToast])
+    }, [backupWarning, setBackupWarning, showToast, updateSettings])
 
     // Dynamic document title
     useDocumentTitle({
@@ -159,7 +162,7 @@ export function AppLayout() {
                 {/* Main Content */}
                 <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#13131a]">
                     <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
-                        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
+                        <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 md:py-4">
                             {/* Header Component */}
                             <Header
                                 searchQuery={searchQuery}
@@ -182,8 +185,8 @@ export function AppLayout() {
                     </div>
                 </main>
 
-                {/* Right Panel - Desktop Only */}
-                {isDesktop && (
+                {/* Right Panel - >= 1024px */}
+                {isWide && (
                     <RightPanel
                         collapsed={rightPanelCollapsed}
                         onToggle={() => setRightPanelCollapsed(!rightPanelCollapsed)}
@@ -204,3 +207,4 @@ export function AppLayout() {
         </FocusModeProvider>
     )
 }
+

@@ -14,101 +14,103 @@ import { VitePWA } from 'vite-plugin-pwa';
  * - Bundle analiz (visualizer)
  * - Görsel optimizasyonu önerileri
  */
+const isAnalyze = process.env.ANALYZE === 'true';
+const plugins = [
+    react(),
+    // Bundle analyzer - generates stats.html after build (only when ANALYZE=true)
+    isAnalyze && visualizer({
+        filename: 'dist/stats.html',
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap'
+    }),
+    VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        manifest: {
+            name: 'PLAN.EX - Akıllı Planlama',
+            short_name: 'PLAN.EX',
+            description: 'Akıllı planlama ve verimlilik uygulaması',
+            theme_color: '#6366f1',
+            background_color: '#0f172a',
+            display: 'standalone',
+            orientation: 'portrait-primary',
+            categories: ['productivity', 'utilities'],
+            start_url: '/',
+            scope: '/',
+            icons: [
+                {
+                    src: 'pwa-192x192.png',
+                    sizes: '192x192',
+                    type: 'image/png'
+                },
+                {
+                    src: 'pwa-512x512.png',
+                    sizes: '512x512',
+                    type: 'image/png'
+                },
+                {
+                    src: 'pwa-512x512.png',
+                    sizes: '512x512',
+                    type: 'image/png',
+                    purpose: 'maskable'
+                }
+            ]
+        },
+        workbox: {
+            globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
+            // Kritik kaynakları önbelleğe al
+            runtimeCaching: [
+                {
+                    urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+                    handler: 'CacheFirst',
+                    options: {
+                        cacheName: 'google-fonts-cache',
+                        expiration: {
+                            maxEntries: 10,
+                            maxAgeSeconds: 60 * 60 * 24 * 365 // 1 yıl
+                        },
+                        cacheableResponse: {
+                            statuses: [0, 200]
+                        }
+                    }
+                },
+                {
+                    urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+                    handler: 'CacheFirst',
+                    options: {
+                        cacheName: 'gstatic-fonts-cache',
+                        expiration: {
+                            maxEntries: 10,
+                            maxAgeSeconds: 60 * 60 * 24 * 365 // 1 yıl
+                        },
+                        cacheableResponse: {
+                            statuses: [0, 200]
+                        }
+                    }
+                },
+                {
+                    // Görseller için lazy caching
+                    urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+                    handler: 'CacheFirst',
+                    options: {
+                        cacheName: 'images-cache',
+                        expiration: {
+                            maxEntries: 50,
+                            maxAgeSeconds: 60 * 60 * 24 * 30 // 30 gün
+                        }
+                    }
+                }
+            ],
+            // Offline fallback
+            navigateFallback: '/index.html',
+            navigateFallbackDenylist: [/^\/api/]
+        }
+    })
+].filter(Boolean);
 export default defineConfig({
-    plugins: [
-        react(),
-        // Bundle analyzer - generates stats.html after build
-        visualizer({
-            filename: 'dist/stats.html',
-            open: false,
-            gzipSize: true,
-            brotliSize: true,
-            template: 'treemap'
-        }),
-        VitePWA({
-            registerType: 'autoUpdate',
-            includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-            manifest: {
-                name: 'PLAN.EX - Akıllı Planlama',
-                short_name: 'PLAN.EX',
-                description: 'Akıllı planlama ve verimlilik uygulaması',
-                theme_color: '#6366f1',
-                background_color: '#0f172a',
-                display: 'standalone',
-                orientation: 'portrait-primary',
-                categories: ['productivity', 'utilities'],
-                start_url: '/',
-                scope: '/',
-                icons: [
-                    {
-                        src: 'pwa-192x192.png',
-                        sizes: '192x192',
-                        type: 'image/png'
-                    },
-                    {
-                        src: 'pwa-512x512.png',
-                        sizes: '512x512',
-                        type: 'image/png'
-                    },
-                    {
-                        src: 'pwa-512x512.png',
-                        sizes: '512x512',
-                        type: 'image/png',
-                        purpose: 'maskable'
-                    }
-                ]
-            },
-            workbox: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
-                // Kritik kaynakları önbelleğe al
-                runtimeCaching: [
-                    {
-                        urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-                        handler: 'CacheFirst',
-                        options: {
-                            cacheName: 'google-fonts-cache',
-                            expiration: {
-                                maxEntries: 10,
-                                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 yıl
-                            },
-                            cacheableResponse: {
-                                statuses: [0, 200]
-                            }
-                        }
-                    },
-                    {
-                        urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-                        handler: 'CacheFirst',
-                        options: {
-                            cacheName: 'gstatic-fonts-cache',
-                            expiration: {
-                                maxEntries: 10,
-                                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 yıl
-                            },
-                            cacheableResponse: {
-                                statuses: [0, 200]
-                            }
-                        }
-                    },
-                    {
-                        // Görseller için lazy caching
-                        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
-                        handler: 'CacheFirst',
-                        options: {
-                            cacheName: 'images-cache',
-                            expiration: {
-                                maxEntries: 50,
-                                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 gün
-                            }
-                        }
-                    }
-                ],
-                // Offline fallback
-                navigateFallback: '/index.html',
-                navigateFallbackDenylist: [/^\/api/]
-            }
-        })
-    ],
+    plugins,
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
@@ -137,14 +139,26 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 // Vendor chunk'ları ayrı dosyalara böl
-                manualChunks: {
-                    // Büyük kütüphaneleri ayrı chunk'lara al
-                    'echarts': ['echarts'],
-                    'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-                    'ui-vendor': ['clsx', '@heroicons/react', '@headlessui/react'],
-                    'db-vendor': ['dexie', 'dexie-react-hooks'],
-                    'time-vendor': ['luxon'],
-                    'state-vendor': ['zustand']
+                manualChunks: (id) => {
+                    if (id.includes('node_modules/echarts/'))
+                        return 'echarts';
+                    if (id.includes('node_modules/react/') ||
+                        id.includes('node_modules/react-dom/') ||
+                        id.includes('node_modules/react-router-dom/')) {
+                        return 'react-vendor';
+                    }
+                    if (id.includes('node_modules/@heroicons/') ||
+                        id.includes('node_modules/@headlessui/') ||
+                        id.includes('node_modules/clsx/')) {
+                        return 'ui-vendor';
+                    }
+                    if (id.includes('node_modules/dexie/') ||
+                        id.includes('node_modules/dexie-react-hooks/')) {
+                        return 'db-vendor';
+                    }
+                    if (id.includes('node_modules/zustand/'))
+                        return 'state-vendor';
+                    return undefined;
                 },
                 // Asset isimlendirme - cache busting
                 assetFileNames: (assetInfo) => {

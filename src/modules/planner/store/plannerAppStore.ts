@@ -131,15 +131,24 @@ export const usePlannerAppStore = create<PlannerAppStore>()(
 
             checkBackupWarning: () => {
                 const { settings } = get()
+                const now = Date.now()
+                const lastWarningTime = settings.lastBackupWarningISO
+                    ? new Date(settings.lastBackupWarningISO).getTime()
+                    : 0
+                const isWarningCooldownOver = !lastWarningTime ||
+                    Number.isNaN(lastWarningTime) ||
+                    (now - lastWarningTime) >= (1000 * 60 * 60 * 24)
+                let needsBackupWarning = false
                 if (settings.lastBackupISO) {
                     const lastBackup = new Date(settings.lastBackupISO)
                     const daysSinceBackup = Math.floor(
                         (Date.now() - lastBackup.getTime()) / (1000 * 60 * 60 * 24)
                     )
-                    set({ backupWarning: daysSinceBackup >= 7 })
+                    needsBackupWarning = daysSinceBackup >= 7
                 } else {
-                    set({ backupWarning: true })
+                    needsBackupWarning = true
                 }
+                set({ backupWarning: needsBackupWarning && isWarningCooldownOver })
             },
         }),
         {

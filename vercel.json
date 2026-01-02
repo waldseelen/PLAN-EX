@@ -1,12 +1,30 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
-    "name": "lifeflow",
+    "name": "planex",
     "version": 2,
     "framework": "vite",
     "buildCommand": "npm run build",
     "outputDirectory": "dist",
-    "installCommand": "npm install",
+    "installCommand": "npm ci",
     "headers": [
+        {
+            "source": "/",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, must-revalidate"
+                }
+            ]
+        },
+        {
+            "source": "/(.*).html",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, must-revalidate"
+                }
+            ]
+        },
         {
             "source": "/assets/(.*)",
             "headers": [

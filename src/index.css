@@ -28,7 +28,7 @@
     --grad-accent: linear-gradient(120deg, #ffd200 0%, #f4e04d 100%);
 
     --glow-primary: 0 0 30px rgba(0, 174, 239, 0.28);
-    --glow-accent: 0 0 20px rgba(255, 210, 0, 0.38);
+    --glow-accent: 0 0 20px rgba(0, 174, 239, 0.22);
 
     --radius-md: 10px;
     --radius-lg: 12px;
@@ -816,7 +816,7 @@
     --planex-color-bg-hover: rgb(51 65 85);
     --planex-color-text-primary: rgb(248 250 252);
     --planex-color-text-secondary: rgb(203 213 225);
-    --planex-color-text-tertiary: rgb(100 116 139);
+    --planex-color-text-tertiary: rgb(148 163 184);
     --planex-color-border: rgb(51 65 85);
     --planex-color-border-hover: rgb(71 85 105);
     --planex-color-accent: rgb(129 140 248);
@@ -984,7 +984,7 @@
 
     --color-text-primary: #f8fafc;
     --color-text-secondary: #cbd5e1;
-    --color-text-tertiary: #64748b;
+    --color-text-tertiary: #94a3b8;
     --color-text-inverse: #0f172a;
 
     --color-border: #334155;

@@ -1,7 +1,7 @@
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
-import { defineConfig } from 'vite'
+import { defineConfig, type PluginOption } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 /**
@@ -16,18 +16,19 @@ import { VitePWA } from 'vite-plugin-pwa'
  * - Görsel optimizasyonu önerileri
  */
 
-export default defineConfig({
-    plugins: [
-        react(),
-        // Bundle analyzer - generates stats.html after build
-        visualizer({
-            filename: 'dist/stats.html',
-            open: false,
-            gzipSize: true,
-            brotliSize: true,
-            template: 'treemap'
-        }) as never,
-        VitePWA({
+const isAnalyze = process.env.ANALYZE === 'true'
+
+const plugins: PluginOption[] = [
+    react(),
+    // Bundle analyzer - generates stats.html after build (only when ANALYZE=true)
+    isAnalyze && visualizer({
+        filename: 'dist/stats.html',
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap'
+    }),
+    VitePWA({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
             manifest: {
@@ -110,7 +111,10 @@ export default defineConfig({
                 navigateFallbackDenylist: [/^\/api/]
             }
         })
-    ],
+].filter(Boolean) as PluginOption[]
+
+export default defineConfig({
+    plugins,
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
@@ -139,14 +143,24 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 // Vendor chunk'ları ayrı dosyalara böl
-                manualChunks: {
-                    // Büyük kütüphaneleri ayrı chunk'lara al
-                    'echarts': ['echarts'],
-                    'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-                    'ui-vendor': ['clsx', '@heroicons/react', '@headlessui/react'],
-                    'db-vendor': ['dexie', 'dexie-react-hooks'],
-                    'time-vendor': ['luxon'],
-                    'state-vendor': ['zustand']
+                manualChunks: (id) => {
+                    if (id.includes('node_modules/echarts/')) return 'echarts'
+                    if (id.includes('node_modules/react/') ||
+                        id.includes('node_modules/react-dom/') ||
+                        id.includes('node_modules/react-router-dom/')) {
+                        return 'react-vendor'
+                    }
+                    if (id.includes('node_modules/@heroicons/') ||
+                        id.includes('node_modules/@headlessui/') ||
+                        id.includes('node_modules/clsx/')) {
+                        return 'ui-vendor'
+                    }
+                    if (id.includes('node_modules/dexie/') ||
+                        id.includes('node_modules/dexie-react-hooks/')) {
+                        return 'db-vendor'
+                    }
+                    if (id.includes('node_modules/zustand/')) return 'state-vendor'
+                    return undefined
                 },
                 // Asset isimlendirme - cache busting
                 assetFileNames: (assetInfo) => {
@@ -186,3 +200,5 @@ export default defineConfig({
         host: true
     }
 })
+
+

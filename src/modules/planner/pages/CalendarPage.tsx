@@ -8,7 +8,7 @@ import { Input, Select, Textarea } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { cn, formatDateDisplay, getDaysUntil } from '../lib/utils'
 import { usePlannerStore } from '../store'
-import type { PlannerEvent, PlannerEventType } from '../types'
+import { COURSE_COLORS, type PlannerEvent, type PlannerEventType } from '../types'
 
 function toDateISO(date: Date): string {
     return date.toISOString().split('T')[0]
@@ -72,6 +72,8 @@ export function CalendarPage() {
         color: '#6366f1',
     })
 
+    const todayISO = useMemo(() => toDateISO(new Date()), [])
+
     const courseOptions = useMemo(
         () => [
             { value: '', label: 'Ders seç (opsiyonel)' },
@@ -125,6 +127,13 @@ export function CalendarPage() {
         }))
     }, [events, courses])
 
+    const todayItems = useMemo(() => {
+        return events
+            .filter(e => e.dateISO === todayISO)
+            .slice()
+            .sort((a, b) => a.type.localeCompare(b.type))
+    }, [events, todayISO])
+
     const monthLabel = useMemo(() => {
         return currentDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
     }, [currentDate])
@@ -177,7 +186,7 @@ export function CalendarPage() {
             return
         }
         if (formData.type === 'exam' && !formData.courseId) {
-            showToast('Sınav için ders seçmelisiniz', { variant: 'error' })
+            showToast('Sinav için ders seçmelisiniz', { variant: 'error' })
             return
         }
 
@@ -231,106 +240,146 @@ export function CalendarPage() {
                         <CalendarDays className="w-6 h-6" />
                         Takvim
                     </h1>
-                    <p className="text-secondary mt-1">Sınavlar ve etkinlikler</p>
+                    <p className="text-secondary mt-1">Sinavlar ve etkinlikler</p>
                 </div>
                 <Button onClick={() => openCreateModal(toDateISO(new Date()), 'event')} leftIcon={<Plus className="w-4 h-4" />}>
                     Yeni
                 </Button>
             </div>
-
-            <Card>
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <IconButton variant="secondary" onClick={() => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))} title="Önceki ay">
-                            <ChevronLeft className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton variant="secondary" onClick={() => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))} title="Sonraki ay">
-                            <ChevronRight className="w-4 h-4" />
-                        </IconButton>
-                        <Button variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>
-                            Bugün
-                        </Button>
-                    </div>
-                    <div className="text-primary font-semibold capitalize">{monthLabel}</div>
-                </div>
-
-                <div className="grid grid-cols-7 gap-2 text-xs text-secondary mb-2">
-                    {['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'].map(d => (
-                        <div key={d} className="text-center py-1">{d}</div>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-7 gap-2">
-                    {days.map(day => {
-                        const examCount = day.items.filter(i => i.type === 'exam').length
-                        const eventCount = day.items.filter(i => i.type === 'event').length
-
-                        return (
-                            <button
-                                key={day.dateISO}
-                                onClick={() => openCreateModal(day.dateISO, 'event')}
-                                className={cn(
-                                    'p-2 rounded-xl border text-left min-h-[72px] transition-colors',
-                                    'border-default hover:bg-secondary/30',
-                                    !day.isCurrentMonth && 'opacity-40',
-                                    day.isToday && 'ring-2 ring-[var(--color-accent)]/40'
-                                )}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-semibold text-primary">{day.date.getDate()}</span>
-                                    {(examCount + eventCount) > 0 && (
-                                        <span className="text-[10px] text-tertiary">{examCount + eventCount}</span>
-                                    )}
-                                </div>
-                                <div className="mt-2 flex flex-col gap-1">
-                                    {examCount > 0 && (
-                                        <span className="text-[10px] text-orange-300">Sınav: {examCount}</span>
-                                    )}
-                                    {eventCount > 0 && (
-                                        <span className="text-[10px] text-blue-300">Etkinlik: {eventCount}</span>
-                                    )}
-                                </div>
-                            </button>
-                        )
-                    })}
-                </div>
-            </Card>
-
-            <Card>
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-primary">Yaklaşan sınavlar</h2>
-                </div>
-
-                {upcomingExams.length === 0 ? (
-                    <EmptyState
-                        icon={<CalendarDays className="w-8 h-8 text-tertiary" />}
-                        title="Yaklaşan sınav yok"
-                        description="Sınav eklediğinizde burada görünür."
-                    />
-                ) : (
-                    <div className="space-y-2">
-                        {upcomingExams.map(({ event, course, daysLeft }) => (
-                            <div
-                                key={event.id}
-                                className={cn('p-3 rounded-xl border flex items-start gap-3', 'border-default bg-secondary/20')}
-                            >
-                                <div className="w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: course?.color ?? '#f97316' }} />
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-primary truncate">{event.title}</p>
-                                    <p className="text-sm text-secondary truncate">{course?.title ?? 'Ders'}</p>
-                                    <p className="text-xs text-tertiary mt-1">{formatDateDisplay(event.dateISO)}</p>
-                                </div>
-                                <Badge color={daysLeft <= 3 ? '#ef4444' : daysLeft <= 7 ? '#f97316' : '#6366f1'}>
-                                    {daysLeft} gün
-                                </Badge>
-                                <IconButton size="sm" onClick={() => openEditModal(event)} title="Düzenle">
-                                    <Pencil className="w-4 h-4" />
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+                <div className="w-full">
+                    <Card>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <IconButton variant="secondary" onClick={() => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))} title="Onceki ay">
+                                    <ChevronLeft className="w-4 h-4" />
                                 </IconButton>
+                                <IconButton variant="secondary" onClick={() => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))} title="Sonraki ay">
+                                    <ChevronRight className="w-4 h-4" />
+                                </IconButton>
+                                <Button variant="secondary" size="sm" onClick={() => setCurrentDate(new Date())}>
+                                    Bugün
+                                </Button>
                             </div>
-                        ))}
-                    </div>
-                )}
-            </Card>
+                            <div className="text-primary font-semibold capitalize">{monthLabel}</div>
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-2 text-xs text-secondary mb-2">
+                            {['Paz', 'Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt'].map(d => (
+                                <div key={d} className="text-center py-1">{d}</div>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-2">
+                            {days.map(day => {
+                                const examCount = day.items.filter(i => i.type === 'exam').length
+                                const eventCount = day.items.filter(i => i.type === 'event').length
+
+                                return (
+                                    <button
+                                        key={day.dateISO}
+                                        onClick={() => openCreateModal(day.dateISO, 'event')}
+                                        className={cn(
+                                            'p-2 rounded-xl border text-left min-h-[72px] transition-colors',
+                                            'border-default hover:bg-secondary/30',
+                                            !day.isCurrentMonth && 'opacity-40',
+                                            day.isToday && 'ring-2 ring-[var(--color-accent)]/40'
+                                        )}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-semibold text-primary">{day.date.getDate()}</span>
+                                            {(examCount + eventCount) > 0 && (
+                                                <span className="text-[10px] text-tertiary">{examCount + eventCount}</span>
+                                            )}
+                                        </div>
+                                        <div className="mt-2 flex flex-col gap-1">
+                                            {examCount > 0 && (
+                                                <span className="text-[10px] text-orange-300">Sinav: {examCount}</span>
+                                            )}
+                                            {eventCount > 0 && (
+                                                <span className="text-[10px] text-blue-300">Etkinlik: {eventCount}</span>
+                                            )}
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </Card>
+                </div>
+
+                <div className="space-y-6">
+                    <Card>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-primary">Bugünün Etkinlikleri</h2>
+                            <Button variant="ghost" size="sm" onClick={() => openCreateModal(todayISO, 'event')}>
+                                Yeni
+                            </Button>
+                        </div>
+
+                        {todayItems.length === 0 ? (
+                            <EmptyState
+                                icon={<CalendarDays className="w-8 h-8 text-tertiary" />}
+                                title="Bugün için kayıt yok"
+                                description="Bugün bir etkinlik ekleyebilirsiniz."
+                            />
+                        ) : (
+                            <div className="space-y-2">
+                                {todayItems.map(item => (
+                                    <div
+                                        key={item.id}
+                                        className={cn('p-3 rounded-xl border flex items-start gap-3', 'border-default bg-secondary/20')}
+                                    >
+                                        <div className="w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: item.color ?? '#6366f1' }} />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-primary truncate">{item.title}</p>
+                                            <p className="text-sm text-secondary">{item.type === 'exam' ? 'Sinav' : 'Etkinlik'}</p>
+                                        </div>
+                                        <IconButton size="sm" onClick={() => openEditModal(item)} title="Duzenle">
+                                            <Pencil className="w-4 h-4" />
+                                        </IconButton>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </Card>
+
+                    <Card>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-primary">Yaklasan sinavlar</h2>
+                        </div>
+
+                        {upcomingExams.length === 0 ? (
+                            <EmptyState
+                                icon={<CalendarDays className="w-8 h-8 text-tertiary" />}
+                                title="Yaklasan sinav yok"
+                                description="Sinav eklediginizde burada gorunur."
+                            />
+                        ) : (
+                            <div className="space-y-2">
+                                {upcomingExams.map(({ event, course, daysLeft }) => (
+                                    <div
+                                        key={event.id}
+                                        className={cn('p-3 rounded-xl border flex items-start gap-3', 'border-default bg-secondary/20')}
+                                    >
+                                        <div className="w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: course?.color ?? '#f97316' }} />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-primary truncate">{event.title}</p>
+                                            <p className="text-sm text-secondary truncate">{course?.title ?? 'Ders'}</p>
+                                            <p className="text-xs text-tertiary mt-1">{formatDateDisplay(event.dateISO)}</p>
+                                        </div>
+                                        <Badge color={daysLeft <= 3 ? '#ef4444' : daysLeft <= 7 ? '#f97316' : '#6366f1'}>
+                                            {daysLeft} gun
+                                        </Badge>
+                                        <IconButton size="sm" onClick={() => openEditModal(event)} title="Duzenle">
+                                            <Pencil className="w-4 h-4" />
+                                        </IconButton>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </Card>
+                </div>
+            </div>
 
             <Modal
                 isOpen={eventModalOpen}
@@ -365,7 +414,7 @@ export function CalendarPage() {
                         onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as PlannerEventType }))}
                         options={[
                             { value: 'event', label: 'Etkinlik' },
-                            { value: 'exam', label: 'Sınav' },
+                            { value: 'exam', label: 'Sinav' },
                         ]}
                     />
                     <Input
@@ -386,12 +435,26 @@ export function CalendarPage() {
                         onChange={(e) => setFormData(prev => ({ ...prev, courseId: e.target.value }))}
                         options={courseOptions}
                     />
-                    <Input
-                        label="Renk"
-                        type="color"
-                        value={formData.color}
-                        onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                    />
+                    <div>
+                        <label className="block text-sm font-medium text-primary mb-2">Renk</label>
+                        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2.5">
+                            {COURSE_COLORS.map(color => (
+                                <button
+                                    key={color}
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, color }))}
+                                    className={cn(
+                                        'w-9 h-9 rounded-full border border-white/10 transition-transform duration-150 shadow-sm',
+                                        formData.color === color
+                                            ? 'ring-2 ring-white/80 ring-offset-2 ring-offset-[#0f1117] scale-110'
+                                            : 'hover:scale-105'
+                                    )}
+                                    style={{ backgroundColor: color }}
+                                    aria-label={`Renk ${color}`}
+                                />
+                            ))}
+                        </div>
+                    </div>
                     <Textarea
                         label="Açıklama (opsiyonel)"
                         value={formData.description}
@@ -413,7 +476,7 @@ export function CalendarPage() {
                                         <div className="w-2.5 h-2.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: item.color ?? (item.type === 'exam' ? '#f97316' : '#6366f1') }} />
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium text-primary truncate">{item.title}</p>
-                                            <p className="text-xs text-secondary">{item.type === 'exam' ? 'Sınav' : 'Etkinlik'}</p>
+                                            <p className="text-xs text-secondary">{item.type === 'exam' ? 'Sinav' : 'Etkinlik'}</p>
                                         </div>
                                     </button>
                                 ))}
@@ -425,3 +488,14 @@ export function CalendarPage() {
         </div>
     )
 }
+
+
+
+
+
+
+
+
+
+
+

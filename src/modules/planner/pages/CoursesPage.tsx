@@ -240,15 +240,17 @@ export function CoursesPage() {
 
                     <div>
                         <label className="block text-sm font-medium text-primary mb-2">Renk</label>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2.5">
                             {COURSE_COLORS.map((color) => (
                                 <button
                                     key={color}
                                     type="button"
                                     onClick={() => setFormData({ ...formData, color })}
                                     className={cn(
-                                        'w-8 h-8 rounded-full transition-transform',
-                                        formData.color === color && 'ring-2 ring-offset-2 ring-[var(--color-accent)] scale-110'
+                                        'w-9 h-9 rounded-full border border-white/10 transition-transform duration-150 shadow-sm',
+                                        formData.color === color
+                                            ? 'ring-2 ring-white/80 ring-offset-2 ring-offset-[#0f1117] scale-110'
+                                            : 'hover:scale-105'
                                     )}
                                     style={{ backgroundColor: color }}
                                 />

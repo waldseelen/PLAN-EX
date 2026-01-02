@@ -422,17 +422,20 @@ export function HabitsDashboardPage() {
                     {/* Color Picker */}
                     <div>
                         <label className="block text-sm font-medium text-secondary mb-2">Renk</label>
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2.5">
                             {HABIT_COLORS.map((color) => (
                                 <button
                                     key={color}
                                     type="button"
                                     className={cn(
-                                        'w-8 h-8 rounded-full transition-transform',
-                                        formData.color === color && 'ring-2 ring-offset-2 ring-[var(--color-accent)] scale-110'
+                                        'w-9 h-9 rounded-full border border-white/10 transition-transform duration-150 shadow-sm',
+                                        formData.color === color
+                                            ? 'ring-2 ring-white/80 ring-offset-2 ring-offset-[#0f1117] scale-110'
+                                            : 'hover:scale-105'
                                     )}
                                     style={{ backgroundColor: color }}
                                     onClick={() => setFormData({ ...formData, color })}
+                                    aria-label={`Renk ${color}`}
                                 />
                             ))}
                         </div>

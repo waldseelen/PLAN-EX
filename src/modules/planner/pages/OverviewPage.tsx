@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { Skeleton, SkeletonCard, SkeletonStatCard } from '@/shared/components'
+import { useMediaQuery } from '@/shared/hooks/useMediaQuery'
 import {
     ArrowRight,
     BarChart3,
@@ -10,12 +11,10 @@ import {
     Target,
     Timer
 } from 'lucide-react'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { GlobalSearchBoxes } from '../components/features/GlobalSearchBoxes'
-import { QuickNotes } from '../components/features/QuickNotes'
 import { Button } from '../components/ui/Button'
-import { Badge, Card, CardHeader, ProgressBar, ProgressRing } from '../components/ui/Card'
+import { Badge, Card, CardHeader, ProgressBar } from '../components/ui/Card'
 import { calculateCourseProgress, cn, getUpcomingEvents } from '../lib/utils'
 import { usePlannerHabits, usePlannerStore } from '../store'
 
@@ -30,10 +29,15 @@ const quickNavItems = [
 ]
 
 export function OverviewPage() {
+    const isDesktop = useMediaQuery('(min-width: 1024px)')
     const courses = usePlannerStore(state => state.courses)
     const events = usePlannerStore(state => state.events)
     const completionState = usePlannerStore(state => state.completionState)
-    const { getTodayHabits } = usePlannerHabits()
+    const addCourse = usePlannerStore(state => state.addCourse)
+    const addUnit = usePlannerStore(state => state.addUnit)
+    const addTask = usePlannerStore(state => state.addTask)
+    const hasHydrated = usePlannerStore(state => state.hasHydrated)
+    const { addHabit, getTodayHabits } = usePlannerHabits()
 
     const todayHabits = getTodayHabits()
 
@@ -77,12 +81,84 @@ export function OverviewPage() {
         [courses, completionState.completedTaskIds]
     )
 
+    const greeting = useMemo(() => {
+        const hour = new Date().getHours()
+        if (hour >= 5 && hour < 12) return 'Günaydın'
+        if (hour >= 12 && hour < 18) return 'İyi günler'
+        if (hour >= 18 && hour < 23) return 'İyi akşamlar'
+        return 'İyi geceler'
+    }, [])
+
+    const isOverviewEmpty = useMemo(() => {
+        return courseProgress.length === 0 && todayHabits.length === 0 && upcomingExams.length === 0
+    }, [courseProgress.length, todayHabits.length, upcomingExams.length])
+
+    const handleCreateSampleCourse = useCallback(() => {
+        const suffix = `${Date.now()}`.slice(-4)
+        const title = `Örnek Ders ${suffix}`
+        addCourse(title, 'PLAN-101')
+        const createdCourse = usePlannerStore.getState().courses.find(c => c.title === title)
+        if (!createdCourse) return
+        addUnit(createdCourse.id, 'Hafta 1')
+        const updatedCourse = usePlannerStore.getState().courses.find(c => c.id === createdCourse.id)
+        const unit = updatedCourse?.units.find(u => u.title === 'Hafta 1')
+        if (!unit) return
+        addTask(createdCourse.id, unit.id, 'İlk görevi tamamla')
+    }, [addCourse, addTask, addUnit])
+
+    const handleCreateSampleHabit = useCallback(() => {
+        addHabit({
+            title: 'Örnek Alışkanlık',
+            type: 'boolean',
+            frequency: { type: 'specificDays', days: [1, 3, 5] },
+            emoji: '🌀',
+        })
+    }, [addHabit])
+
+    if (!hasHydrated) {
+        return (
+            <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <Skeleton width={180} height={28} />
+                        <Skeleton width={260} height={16} />
+                    </div>
+                    <Skeleton width={120} height={36} />
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                        <SkeletonCard key={`nav-skeleton-${index}`} />
+                    ))}
+                </div>
+
+                <div className="card p-4 space-y-3">
+                    <Skeleton width={140} height={16} />
+                    <Skeleton variant="rectangular" height={44} />
+                    <Skeleton width={220} height={14} />
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <SkeletonStatCard key={`stat-skeleton-${index}`} />
+                    ))}
+                </div>
+
+                <div className="grid lg:grid-cols-3 gap-6">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <SkeletonCard key={`section-skeleton-${index}`} />
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className={cn('space-y-6 animate-fade-in', isOverviewEmpty && 'max-w-[800px] mx-auto')}>
             {/* Header with greeting */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-primary">Merhaba! 👋</h1>
+                    <h1 className="text-2xl font-bold text-primary">{greeting}! 👋</h1>
                     <p className="text-secondary mt-1">Bugün ne yapmak istiyorsun?</p>
                 </div>
                 <Link to="/settings">
@@ -95,12 +171,9 @@ export function OverviewPage() {
 
             {/* Quick Navigation Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                {quickNavItems.map((item, index) => (
-                    <motion.div
+                {quickNavItems.map((item) => (
+                    <div
                         key={item.to}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
                     >
                         <Link to={item.to}>
                             <Card className="p-4 hover:scale-[1.02] transition-all duration-200 hover:shadow-lg group cursor-pointer h-full">
@@ -114,69 +187,56 @@ export function OverviewPage() {
                                 <p className="text-xs text-tertiary mt-0.5 hidden md:block">{item.description}</p>
                             </Card>
                         </Link>
-                    </motion.div>
+                    </div>
                 ))}
             </div>
 
-            {/* Global Search Boxes */}
-            <GlobalSearchBoxes />
-
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
                     <Card className="text-center">
                         <div className="p-3 rounded-full bg-blue-500/10 w-fit mx-auto mb-3">
                             <BookOpen className="w-6 h-6 text-blue-500" />
                         </div>
-                        <p className="text-2xl font-bold text-primary">{stats.totalCourses}</p>
+                        <p className="text-3xl md:text-4xl font-bold text-primary">{stats.totalCourses}</p>
                         <p className="text-sm text-secondary">Ders</p>
                     </Card>
-                </motion.div>
+                </div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <div>
                     <Card className="text-center">
                         <div className="p-3 rounded-full bg-green-500/10 w-fit mx-auto mb-3">
                             <CheckCircle className="w-6 h-6 text-green-500" />
                         </div>
-                        <p className="text-2xl font-bold text-primary">
+                        <p className="text-3xl md:text-4xl font-bold text-primary">
                             {stats.completedTasks}/{stats.totalTasks}
                         </p>
                         <p className="text-sm text-secondary">Görev Tamamlandı</p>
                     </Card>
-                </motion.div>
+                </div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                <div>
                     <Card className="text-center">
                         <div className="p-3 rounded-full bg-purple-500/10 w-fit mx-auto mb-3">
                             <Target className="w-6 h-6 text-purple-500" />
                         </div>
-                        <p className="text-2xl font-bold text-primary">
+                        <p className="text-3xl md:text-4xl font-bold text-primary">
                             {stats.habitsCompleted}/{stats.todayHabits}
                         </p>
                         <p className="text-sm text-secondary">Bugünkü Alışkanlık</p>
                     </Card>
-                </motion.div>
-
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                    <Card className="text-center">
-                        <div className="p-3 rounded-full bg-orange-500/10 w-fit mx-auto mb-3">
-                            <Calendar className="w-6 h-6 text-orange-500" />
-                        </div>
-                        <p className="text-2xl font-bold text-primary">{upcomingExams.length}</p>
-                        <p className="text-sm text-secondary">Yaklaşan Sınav</p>
-                    </Card>
-                </motion.div>
+                </div>
             </div>
 
             <div className="grid lg:grid-cols-3 gap-6 auto-rows-min">
                 {/* Course Progress */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                <div>
                     <Card>
                         <CardHeader
                             title="Ders İlerlemesi"
                             action={
                                 <Link to="/planner/courses">
-                                    <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                                    <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />} className="text-primary hover:underline underline-offset-4">
                                         Tümü
                                     </Button>
                                 </Link>
@@ -186,12 +246,17 @@ export function OverviewPage() {
                         {courseProgress.length === 0 ? (
                             <div className="text-center py-8">
                                 <BookOpen className="w-12 h-12 text-tertiary mx-auto mb-3" />
-                                <p className="text-secondary">Henüz ders eklenmemiş</p>
-                                <Link to="/planner/courses">
-                                    <Button variant="primary" size="sm" className="mt-3">
-                                        Ders Ekle
+                                <p className="text-secondary">Henüz ders eklenmedi</p>
+                                <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+                                    <Button variant="primary" size="sm" onClick={handleCreateSampleCourse}>
+                                        Örnek Ders Ekle
                                     </Button>
-                                </Link>
+                                    <Link to="/planner/courses">
+                                        <Button variant="secondary" size="sm">
+                                            Ders Ekle
+                                        </Button>
+                                    </Link>
+                                </div>
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -213,16 +278,16 @@ export function OverviewPage() {
                             </div>
                         )}
                     </Card>
-                </motion.div>
+                </div>
 
                 {/* Upcoming Exams */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                <div>
                     <Card>
                         <CardHeader
                             title="Yaklaşan Sınavlar"
                             action={
                                 <Link to="/calendar">
-                                    <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                                    <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />} className="text-primary hover:underline underline-offset-4">
                                         Takvim
                                     </Button>
                                 </Link>
@@ -263,6 +328,8 @@ export function OverviewPage() {
                                         </div>
                                         <Badge
                                             color={daysLeft <= 3 ? '#ef4444' : daysLeft <= 7 ? '#f97316' : '#6366f1'}
+                                            size="md"
+                                            className={cn(daysLeft <= 3 && 'animate-pulse font-bold')}
                                         >
                                             {daysLeft === 0 ? '🔥 BUGÜN' : daysLeft === 1 ? '⚠️ YARIN' : `${daysLeft} gün`}
                                         </Badge>
@@ -271,16 +338,16 @@ export function OverviewPage() {
                             </div>
                         )}
                     </Card>
-                </motion.div>
+                </div>
 
                 {/* Today's Habits */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+                <div>
                     <Card>
                         <CardHeader
                             title="Bugünkü Alışkanlıklar"
                             action={
                                 <Link to="/habits">
-                                    <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                                    <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />} className="text-primary hover:underline underline-offset-4">
                                         Tümü
                                     </Button>
                                 </Link>
@@ -291,11 +358,16 @@ export function OverviewPage() {
                             <div className="text-center py-8">
                                 <Target className="w-12 h-12 text-tertiary mx-auto mb-3" />
                                 <p className="text-secondary">Bugün için alışkanlık yok</p>
-                                <Link to="/habits">
-                                    <Button variant="primary" size="sm" className="mt-3">
-                                        Alışkanlık Ekle
+                                <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+                                    <Button variant="primary" size="sm" onClick={handleCreateSampleHabit}>
+                                        Örnek Alışkanlık Ekle
                                     </Button>
-                                </Link>
+                                    <Link to="/habits">
+                                        <Button variant="secondary" size="sm">
+                                            Alışkanlık Ekle
+                                        </Button>
+                                    </Link>
+                                </div>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -321,40 +393,30 @@ export function OverviewPage() {
                             </div>
                         )}
                     </Card>
-                </motion.div>
-
-                {/* Quick Stats */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
-                    <Card>
-                        <CardHeader title="Genel İlerleme" />
-
-                        <div className="flex items-center justify-center py-4">
-                            <ProgressRing value={stats.completionPercentage} size={120} strokeWidth={10}>
-                                <div className="text-center">
-                                    <p className="text-2xl font-bold text-primary">{stats.completionPercentage}%</p>
-                                    <p className="text-xs text-secondary">Tamamlandı</p>
-                                </div>
-                            </ProgressRing>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                            <div className="text-center p-3 bg-secondary rounded-lg">
-                                <p className="text-lg font-semibold text-primary">{stats.completedTasks}</p>
-                                <p className="text-xs text-secondary">Tamamlanan Görev</p>
-                            </div>
-                            <div className="text-center p-3 bg-secondary rounded-lg">
-                                <p className="text-lg font-semibold text-primary">{stats.totalTasks - stats.completedTasks}</p>
-                                <p className="text-xs text-secondary">Kalan Görev</p>
-                            </div>
-                        </div>
-                    </Card>
-                </motion.div>
-
-                {/* Quick Notes */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}>
-                    <QuickNotes />
-                </motion.div>
+                </div>
+                <Card>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-primary">💬 Yorumlar</h3>
+                        <span className="text-xs text-tertiary">Yakında</span>
+                    </div>
+                    <p className="text-sm text-secondary">Bu alanı yorumlar için kullanacağız. Şimdilik kapalı.</p>
+                </Card>
             </div>
         </div>
     );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

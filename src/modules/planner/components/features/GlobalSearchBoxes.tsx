@@ -71,7 +71,7 @@ function SearchBox({ type, placeholder, icon, bgColor, onSearch }: SearchBoxProp
                     type="submit"
                     className={cn(
                         'p-2 rounded-lg transition-colors',
-                        'hover:bg-white/10 text-gray-400 hover:text-white',
+                        'hover:bg-white/10 text-slate-300 hover:text-white',
                         'disabled:opacity-50 disabled:cursor-not-allowed'
                     )}
                     disabled={!query.trim()}
@@ -102,7 +102,7 @@ export function GlobalSearchBoxes() {
 
     return (
         <div className="space-y-3">
-            <h3 className="text-sm font-medium text-gray-400 mb-3">Hızlı Arama</h3>
+            <h3 className="text-sm font-medium text-slate-300 mb-3">Hızlı Arama</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <SearchBox

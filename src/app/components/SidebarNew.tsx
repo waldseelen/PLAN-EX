@@ -89,7 +89,7 @@ export function Sidebar({ collapsed = false, onToggleCollapse }: SidebarProps) {
                     <button
                         onClick={onToggleCollapse}
                         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                        className="w-full min-h-[44px] h-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-white hover:bg-white/5 active:bg-white/10 transition-all mb-2 touch-manipulation"
+                        className="w-full min-h-[44px] h-10 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/5 active:bg-white/10 transition-all mb-2 touch-manipulation"
                     >
                         {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                     </button>
@@ -132,7 +132,7 @@ const NavItem = ({ to, icon, label, collapsed: _collapsed }: NavItemProps) => (
         className={({ isActive }) =>
             `w-full min-h-[44px] h-11 flex items-center justify-center rounded-lg transition-all relative group touch-manipulation ${isActive
                 ? 'text-white bg-[rgba(0,174,239,0.15)] border border-cyan-500/30 shadow-[0_0_20px_rgba(0,174,239,0.18)]'
-                : 'text-slate-500 hover:text-white hover:bg-white/5 active:bg-white/10'
+                : 'text-slate-400 hover:text-white hover:bg-white/5 active:bg-white/10'
             }`
         }
     >

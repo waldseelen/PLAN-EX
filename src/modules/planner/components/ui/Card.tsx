@@ -39,7 +39,7 @@ export function CardHeader({ title, subtitle, action, className }: CardHeaderPro
             <div>
                 <h3 className="text-lg font-semibold text-primary">{title}</h3>
                 {subtitle && (
-                    <p className="text-sm text-secondary mt-0.5">{subtitle}</p>
+                    <p className="text-xs font-normal text-secondary mt-1">{subtitle}</p>
                 )}
             </div>
             {action}
@@ -58,8 +58,8 @@ interface ProgressBarProps {
 
 const progressSizeClasses = {
     sm: 'h-1',
-    md: 'h-2',
-    lg: 'h-3',
+    md: 'h-3',
+    lg: 'h-4',
 };
 
 export function ProgressBar({

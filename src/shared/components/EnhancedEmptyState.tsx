@@ -196,7 +196,7 @@ export function EnhancedEmptyState({
             {description && (
                 <p
                     className={clsx(
-                        'text-surface-500 dark:text-surface-400 mb-6 max-w-sm mx-auto',
+                        'text-surface-500 dark:text-surface-300 mb-6 max-w-sm mx-auto',
                         sizes.description
                     )}
                 >

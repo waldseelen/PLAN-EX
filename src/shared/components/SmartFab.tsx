@@ -7,7 +7,7 @@ import {
     XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { clsx } from 'clsx'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 interface SmartFabProps {
     /** Ana aksiyon (tek tıklama) */
@@ -42,6 +42,12 @@ export function SmartFab({
     className,
 }: SmartFabProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+    useEffect(() => {
+        const openHandler = () => setIsMenuOpen(true)
+        window.addEventListener('smartfab:open-menu', openHandler)
+        return () => window.removeEventListener('smartfab:open-menu', openHandler)
+    }, [])
 
     const { handlers, isLongPress } = useLongPress({
         delay: 400,

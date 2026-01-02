@@ -134,7 +134,7 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
     const variantStyles = {
         default: 'bg-surface-800 dark:bg-surface-700 text-white',
         success: 'bg-success-500 text-white',
-        warning: 'bg-amber-500 text-white',
+        warning: 'bg-amber-400 text-surface-900',
         error: 'bg-red-500 text-white',
         undo: 'bg-surface-800 dark:bg-surface-700 text-white border-l-4 border-primary-500',
     }

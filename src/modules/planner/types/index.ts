@@ -164,6 +164,7 @@ export const AppSettingsSchema = z.object({
     pomodoro: PomodoroSettingsSchema,
     notifications: NotificationSettingsSchema,
     lastBackupISO: z.string().optional(),
+    lastBackupWarningISO: z.string().optional(),
 });
 export type AppSettings = z.infer<typeof AppSettingsSchema>;
 
@@ -242,12 +243,15 @@ export const COURSE_COLORS = [
     '#84cc16', '#22c55e', '#10b981', '#14b8a6',
     '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
     '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+    '#f43f5e', '#78716c', '#64748b', '#737373',
 ] as const;
 
 export const HABIT_COLORS = [
-    '#ef4444', '#f97316', '#f59e0b', '#84cc16',
-    '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
-    '#6366f1', '#8b5cf6', '#d946ef', '#ec4899',
+    '#ef4444', '#f97316', '#f59e0b', '#eab308',
+    '#84cc16', '#22c55e', '#10b981', '#14b8a6',
+    '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
+    '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+    '#f43f5e', '#78716c', '#64748b', '#737373',
 ] as const;
 
 export const DEFAULT_POMODORO_SETTINGS: PomodoroSettings = {
@@ -272,4 +276,5 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
         examReminderDays: 3,
     },
     lastBackupISO: undefined,
+    lastBackupWarningISO: undefined,
 };

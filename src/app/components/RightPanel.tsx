@@ -13,8 +13,8 @@ import { useMemo, useState } from 'react'
 const CircularProgress = ({
     percentage,
     color,
-    size = 70,
-    strokeWidth = 5,
+    size = 60,
+    strokeWidth = 4,
 }: {
     percentage: number
     color: string
@@ -101,7 +101,7 @@ export function RightPanel({ collapsed, onToggle }: RightPanelProps) {
 
     if (collapsed) {
         return (
-            <aside className="w-14 h-full hidden xl:flex flex-col items-center justify-between py-4 bg-[var(--color-surface)] border-l border-white/5">
+            <aside className="w-14 h-full hidden lg:flex flex-col items-center justify-between py-4 bg-[var(--color-surface)] border-l border-white/5">
                 <button
                     onClick={onToggle}
                     className="w-10 h-10 rounded-lg border border-white/10 bg-[rgba(255,255,255,0.04)] hover:border-cyan-300/50 hover:shadow-glow-sm text-slate-200"
@@ -109,13 +109,13 @@ export function RightPanel({ collapsed, onToggle }: RightPanelProps) {
                 >
                     ↗
                 </button>
-                <div className="text-[10px] text-slate-500 rotate-90">Insights</div>
+                <div className="text-[10px] text-slate-400 rotate-90">Insights</div>
             </aside>
         )
     }
 
     return (
-        <aside className="w-[340px] h-full p-5 hidden xl:flex flex-col gap-4 overflow-y-auto custom-scrollbar bg-[var(--color-surface)] border-l border-white/5">
+        <aside className="w-[340px] h-full p-5 hidden lg:flex flex-col gap-4 overflow-y-auto custom-scrollbar bg-[var(--color-surface)] border-l border-white/5">
             <div className="flex items-center justify-between">
                 <h3 className="text-xs uppercase tracking-[0.22em] text-slate-400">Insights</h3>
                 <button
@@ -146,8 +146,8 @@ export function RightPanel({ collapsed, onToggle }: RightPanelProps) {
                     icon={<CheckCircle2 size={16} />}
                     label="Done"
                     value={stats.completed}
-                    iconBg="bg-[rgba(255,210,0,0.12)]"
-                    iconColor="text-[var(--color-accent)]"
+                    iconBg="bg-[rgba(0,174,239,0.12)]"
+                    iconColor="text-cyan-300"
                 />
                 <StatCard
                     icon={<TrendingUp size={16} />}
@@ -164,7 +164,7 @@ export function RightPanel({ collapsed, onToggle }: RightPanelProps) {
                     <h3 className="font-bold text-xs uppercase tracking-wider text-slate-400">
                         Tamamlanan Görevler
                     </h3>
-                    <button className="text-xs text-cyan-300 hover:text-white">Tümünü Gör</button>
+                    <button className="text-xs text-cyan-200 hover:text-white hover:underline underline-offset-4">Tümünü Gör</button>
                 </div>
 
                 <div className="grid grid-cols-4 gap-1.5 mb-4">
@@ -173,8 +173,8 @@ export function RightPanel({ collapsed, onToggle }: RightPanelProps) {
                             key={period}
                             onClick={() => setSelectedPeriod(period)}
                             className={`py-1.5 rounded-lg text-xs font-semibold transition-all ${selectedPeriod === period
-                                    ? 'bg-gradient-to-r from-[#00aeef] via-[#29c6cd] to-[#ffd200] text-[#0b0b0b]'
-                                    : 'bg-[var(--color-surface-3)] hover:bg-[#262c38] text-slate-300'
+                                ? 'bg-gradient-to-r from-[#00aeef] via-[#29c6cd] to-[#00d9ff] text-[#0b0b0b]'
+                                : 'bg-[var(--color-surface-3)] hover:bg-[#262c38] text-slate-300'
                                 }`}
                         >
                             {period}
@@ -195,7 +195,7 @@ export function RightPanel({ collapsed, onToggle }: RightPanelProps) {
                         icon={<Target size={14} />}
                         label="Verimlilik"
                         value={`${stats.completionRate}%`}
-                        gradient="from-[rgba(0,174,239,0.18)] to-[rgba(255,210,0,0.18)]"
+                        gradient="from-[rgba(0,174,239,0.18)] to-[rgba(41,198,205,0.18)]"
                         border="border-cyan-400/30"
                         iconColor="text-cyan-200"
                     />
@@ -211,9 +211,9 @@ export function RightPanel({ collapsed, onToggle }: RightPanelProps) {
                         icon={<Star size={14} />}
                         label="Puan"
                         value={(stats.completed * 35).toLocaleString()}
-                        gradient="from-[rgba(255,210,0,0.16)] to-[rgba(244,224,77,0.16)]"
-                        border="border-[rgba(255,210,0,0.35)]"
-                        iconColor="text-[var(--color-accent)]"
+                        gradient="from-[rgba(0,174,239,0.16)] to-[rgba(41,198,205,0.16)]"
+                        border="border-cyan-400/30"
+                        iconColor="text-cyan-200"
                     />
                 </div>
             </div>
@@ -243,10 +243,10 @@ export function RightPanel({ collapsed, onToggle }: RightPanelProps) {
                     />
                     <CircularProgressItem
                         percentage={stats.review > 0 ? Math.round((stats.review / stats.total) * 100) : 0}
-                        color="text-[var(--color-accent)]"
+                        color="text-cyan-300"
                         icon={<Star size={14} />}
-                        iconBg="bg-[rgba(255,210,0,0.14)]"
-                        iconColor="text-[var(--color-accent)]"
+                        iconBg="bg-[rgba(0,174,239,0.14)]"
+                        iconColor="text-cyan-200"
                         label="Review"
                     />
                     <CircularProgressItem
@@ -282,7 +282,7 @@ const StatCard = ({
             <div className={`p-1.5 rounded-lg ${iconBg}`}>
                 <span className={iconColor}>{icon}</span>
             </div>
-            <span className="text-[10px] text-slate-500">{label}</span>
+            <span className="text-[10px] text-slate-400">{label}</span>
         </div>
         <div className="text-xl font-bold text-white">{value}</div>
     </div>
@@ -329,9 +329,9 @@ const CircularProgressItem = ({
 }) => (
     <div className="flex flex-col items-center">
         <CircularProgress percentage={percentage} color={color} />
-        <div className={`w-7 h-7 ${iconBg} rounded-lg flex items-center justify-center mt-2`}>
+        <div className={`w-6 h-6 ${iconBg} rounded-lg flex items-center justify-center mt-2`}>
             <span className={iconColor}>{icon}</span>
         </div>
-        <span className="text-[10px] text-slate-400 mt-1">{label}</span>
+        <span className="text-[10px] text-slate-300 mt-1">{label}</span>
     </div>
 )
