@@ -1,5 +1,4 @@
 import { Skeleton, SkeletonCard, SkeletonStatCard } from '@/shared/components'
-import { useMediaQuery } from '@/shared/hooks/useMediaQuery'
 import {
     ArrowRight,
     BarChart3,
@@ -29,7 +28,6 @@ const quickNavItems = [
 ]
 
 export function OverviewPage() {
-    const isDesktop = useMediaQuery('(min-width: 1024px)')
     const courses = usePlannerStore(state => state.courses)
     const events = usePlannerStore(state => state.events)
     const completionState = usePlannerStore(state => state.completionState)
@@ -394,13 +392,6 @@ export function OverviewPage() {
                         )}
                     </Card>
                 </div>
-                <Card>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-primary">💬 Yorumlar</h3>
-                        <span className="text-xs text-tertiary">Yakında</span>
-                    </div>
-                    <p className="text-sm text-secondary">Bu alanı yorumlar için kullanacağız. Şimdilik kapalı.</p>
-                </Card>
             </div>
         </div>
     );

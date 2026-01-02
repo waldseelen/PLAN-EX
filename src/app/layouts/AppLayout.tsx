@@ -21,7 +21,6 @@ export function AppLayout() {
     const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-    const [isSearchFocused, setIsSearchFocused] = useState(false)
 
     // Backup uyarısı kontrolü
     const { checkBackupWarning, backupWarning, setBackupWarning, updateSettings } = usePlannerAppStore()
@@ -70,7 +69,6 @@ export function AppLayout() {
 
     // Arama kutusuna odaklan
     const handleFocusSearch = useCallback(() => {
-        setIsSearchFocused(true)
         // Header'daki arama input'una focus ver
         const searchInput = document.querySelector('input[placeholder*="ara"]') as HTMLInputElement
         if (searchInput) {
@@ -167,7 +165,6 @@ export function AppLayout() {
                             <Header
                                 searchQuery={searchQuery}
                                 onSearchChange={setSearchQuery}
-                                onNewTask={() => navigate('/planner/tasks')}
                                 onCalendarClick={() => navigate('/calendar')}
                             />
 

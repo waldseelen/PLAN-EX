@@ -26,6 +26,14 @@ export function useLongPress({
     const startPos = useRef<{ x: number; y: number } | null>(null)
     const isLongPressTriggered = useRef(false)
 
+    const clear = useCallback(() => {
+        if (timerRef.current) {
+            clearTimeout(timerRef.current)
+            timerRef.current = null
+        }
+        startPos.current = null
+    }, [])
+
     const start = useCallback(
         (e: React.TouchEvent | React.MouseEvent) => {
             setIsLongPress(false)
@@ -83,16 +91,8 @@ export function useLongPress({
                 clear()
             }
         },
-        [moveThreshold]
+        [moveThreshold, clear]
     )
-
-    const clear = useCallback(() => {
-        if (timerRef.current) {
-            clearTimeout(timerRef.current)
-            timerRef.current = null
-        }
-        startPos.current = null
-    }, [])
 
     const end = useCallback(
         (_e: React.TouchEvent | React.MouseEvent) => {

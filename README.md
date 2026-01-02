@@ -165,13 +165,45 @@ Not: Legacy yollar `/tasks`, `/productivity`, `/statistics` ilgili `/planner/*` 
 
 ## Veri Saklama
 
-| Veri Tipi | Depolama |
-|-----------|----------|
-| Planner verileri (courses, tasks, events) | Zustand persist + localStorage |
-| Alışkanlıklar ve loglar | Zustand persist + localStorage |
-| PDF dosyaları | IndexedDB (Dexie) - ayrı DB |
-| Pomodoro oturumları | localStorage (`pomodoroSessions`) |
-| Settings ve diğer modüller | IndexedDB (Dexie) |
+### Dexie (IndexedDB) - Birincil Veri Katmanı (v2.0+)
+
+| Tablo | Açıklama |
+|-------|----------|
+| `courses` | Ders tanımları |
+| `units` | Ünite tanımları |
+| `tasks` | Görev tanımları + tamamlanma durumu |
+| `events` | Sınav, ödev, etkinlikler |
+| `personalTasks` | Kişisel görevler |
+| `habits` | Alışkanlık tanımları |
+| `habitLogs` | Günlük alışkanlık logları |
+| `completionRecords` | Tamamlama geçmişi |
+| `lectureNotesMeta` | PDF notları metadata |
+
+**Index Stratejisi:**
+- Compound index: `[courseId+order]`, `[type+dateISO]`
+- O(1) sorgular için optimize edilmiş
+
+### Zustand (UI State Only)
+
+| Store | İçerik |
+|-------|--------|
+| `plannerUIStore` | Seçili ders/ünite, modal durumları, filtreler, sıralama |
+| `uiPreferencesStore` | Tema, sidebar durumu |
+
+### localStorage (Sadece Preferences)
+
+| Key | Açıklama |
+|-----|----------|
+| `planex-ui-prefs` | UI tercihleri |
+| `planex-migration-flags` | Migration durumu |
+
+### Migration (v1 → v2)
+
+Legacy `lifeflow-planner` verisi otomatik olarak Dexie'ye migrate edilir:
+- Zod ile veri doğrulama
+- Atomic transaction
+- 7 gün rollback penceresi
+- Corrupt veri kurtarma
 
 ---
 
@@ -183,44 +215,136 @@ src/
 │   ├── components/         # Header, Sidebar, Bottom Nav
 │   ├── layouts/            # AppLayout
 │   └── providers/          # ThemeProvider
+├── db/                     # Dexie/IndexedDB katmanı
+│   ├── database.ts         # LifeFlowDB (time tracking)
+│   └── planner/            # Planner Dexie modülü
+│       ├── database.ts     # PlannerDatabase sınıfı
+│       ├── types.ts        # DB entity tipleri
+│       ├── queries/        # useLiveQuery hook'ları
+│       │   ├── courseQueries.ts
+│       │   ├── taskQueries.ts
+│       │   ├── eventQueries.ts
+│       │   ├── habitQueries.ts
+│       │   └── statsQueries.ts
+│       └── migrations/     # localStorage → Dexie migration
+│           ├── migrationService.ts
+│           └── MigrationProvider.tsx
+├── i18n/                   # Çoklu dil desteği
+│   ├── locales/            # TR/EN çevirileri
+│   ├── config.ts           # i18n yapılandırması
+│   └── I18nProvider.tsx    # React context/hooks
 ├── modules/
 │   ├── planner/            # Ders, Görev, Takvim modülleri
 │   │   ├── components/     # UI bileşenleri
 │   │   │   ├── features/   # GlobalSearchBoxes, LectureNotes, QuickNotes
 │   │   │   └── ui/         # Button, Card, Input, Modal
-│   │   ├── lib/            # Utils, pdfStorage
+│   │   ├── lib/            # Utils, hooks
+│   │   │   └── hooks/      # useCalendarGrid, useCalendarEvents
 │   │   ├── pages/          # Sayfa bileşenleri
-│   │   ├── store/          # Zustand store
+│   │   ├── store/          # Zustand store (UI-only)
+│   │   │   ├── plannerStore.ts    # Legacy (migration için)
+│   │   │   └── plannerUIStore.ts  # UI state only
 │   │   └── types/          # TypeScript tipleri
 │   └── settings/           # Ayarlar modülü
-├── shared/                 # Paylaşılan bileşenler
-│   ├── components/         # Toast, Modal, ErrorBoundary
-│   ├── hooks/              # useKeyboardShortcuts, useMediaQuery, useCompletionFeedback
-│   └── utils/              # Yardımcı fonksiyonlar
-└── db/                     # Dexie/IndexedDB şeması
+└── shared/                 # Paylaşılan bileşenler
+    ├── components/         # Toast, Modal, ErrorBoundary
+    ├── hooks/              # useKeyboardShortcuts, useMediaQuery
+    └── utils/              # Yardımcı fonksiyonlar
 ```
 
 ---
 
-## Son Güncelleme (2026-01-02)
+## Son Güncelleme (2026-01-27)
 
-### ➕ Yeni Eklenenler
-- **Gelişmiş Arama**: Header'da debounced arama, eşleşen metin vurgulama, ders/ünite/görev kategorilendirmesi
-- **Drag & Drop**: Görevleri sürükle-bırak ile yeniden sıralama
-- **Confetti Animasyonu**: Görev tamamlandığında kutlama efekti
-- **Completion Sound**: Görev tamamlama ses efekti
-- **Sınav Alarm Animasyonları**: ≤3 gün kalan sınavlar için pulse/glow efektleri
-- **Backup Hatırlatıcı**: 7 gün yedekleme yapılmadığında otomatik uyarı
-- **Pomodoro İstatistik Kaydı**: Oturumlar localStorage'a kalıcı kaydediliyor
-- **Gelişmiş Klavye Kısayolları**: Ctrl+K (ara), Ctrl+Z (geri al), Esc (modal kapat)
+### ➕ Yeni Eklenenler (v2.0 - Dexie Refactor)
+- **Dexie Veri Katmanı**: localStorage → IndexedDB migration tamamlandı
+  - `PlannerDatabase` ile courses, units, tasks, events, habits tabloları
+  - Compound index'ler ile O(1) sorgular
+  - `useLiveQuery` hook'ları ile reaktif veri
+- **Migration Servisi**: Legacy veri otomatik migration
+  - Zod validasyonu
+  - 7 gün rollback penceresi
+  - Corrupt veri kurtarma
+- **plannerUIStore**: UI-only state ayrıştırması
+  - Seçili öğeler, modal durumları, filtreler
+  - localStorage persist sadece tercihler için
+- **CalendarPage Decomposition**: 500+ satır monolith → hook'lar
+  - `useCalendarGrid`: 42 günlük grid hesaplama
+  - `useCalendarEvents`: DB event sorguları
+  - `useEventModal`: Modal state yönetimi
+- **i18n Altyapısı**: Çoklu dil desteği
+  - Türkçe (varsayılan) ve İngilizce
+  - Namespace tabanlı çeviriler (common, planner, calendar, habits, settings)
+  - `useTranslation`, `useDateFormatter` hook'ları
 
-### 🧹 Temizlenen/Düzeltilen
-- Button bileşeni type safety düzeltmesi
-- Import optimizasyonları
-- Pomodoro istatistik bağlantısı düzeltildi
+### 🧪 Test Coverage
+- 236 test geçiyor
+- Calendar grid testleri
+- Progress/streak hesaplama testleri
+- Dexie query testleri (fake-indexeddb)
+- Migration testleri
 
-### ⏳ Planlanan
-- Syllabus export (Markdown)
-- Daily log export
-- Veri katmanı birleştirme (Zustand → Dexie adapter)
-- Auto-save (30 saniyede bir)
+### ⏳ Sonraki Adımlar
+- Component entegrasyonu (yeni hook'lar + Dexie queries)
+- Eski plannerStore kod temizliği
+- Performance profiling
+- E2E test güncellemeleri
+
+---
+
+## 🚀 Deployment
+
+### Vercel'e Deploy Etme
+
+#### Otomatik Deploy (Önerilen)
+1. GitHub repository'nizi Vercel'e bağlayın
+2. Vercel otomatik olarak `vercel.json` yapılandırmasını algılar
+3. Her push otomatik olarak deploy edilir
+
+#### Manuel Deploy
+```bash
+# Vercel CLI'yi yükleyin
+npm i -g vercel
+
+# Projeyi deploy edin
+vercel
+
+# Production'a deploy edin
+vercel --prod
+```
+
+#### Deploy Kontrol Listesi
+✅ TypeScript hataları yok (`npm run build` başarılı)
+✅ Test dosyaları geçiyor (`npm test`)
+✅ `vercel.json` yapılandırması mevcut
+✅ `package.json` build script'i doğru
+✅ PWA asset'leri (`public/` klasöründe)
+✅ Environment variables (gerekiyorsa)
+
+### Vercel Yapılandırması
+
+Proje zaten production-ready olarak yapılandırılmıştır:
+
+- **Framework**: Vite
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Install Command**: `npm ci`
+- **Region**: Frankfurt (fra1)
+- **Cache Headers**: Asset'ler için optimize edilmiş
+- **Security Headers**: CSP, XSS Protection, Frame Options
+- **SPA Routing**: Tüm route'lar `index.html`'e yönlendirilir
+
+### PWA Desteği
+
+Uygulama Progressive Web App olarak çalışır:
+- Service Worker otomatik olarak generate edilir
+- Offline çalışma
+- 192x192 ve 512x512 PWA icon'ları
+- Manifest.json konfigürasyonu
+- iOS Safari desteği (apple-touch-icon)
+
+---
+
+## 📝 License
+
+MIT

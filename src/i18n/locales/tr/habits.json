@@ -1,0 +1,59 @@
+{
+    "title": "Alışkanlıklar",
+    "subtitle": "Günlük rutinlerin",
+    "habit": {
+        "title": "Alışkanlık",
+        "name": "Alışkanlık Adı",
+        "description": "Açıklama",
+        "emoji": "Emoji",
+        "color": "Renk",
+        "type": "Tip",
+        "target": "Hedef",
+        "unit": "Birim",
+        "create": "Yeni Alışkanlık",
+        "edit": "Düzenle",
+        "delete": "Sil",
+        "archive": "Arşivle",
+        "unarchive": "Arşivden Çıkar"
+    },
+    "habitType": {
+        "boolean": "Yapıldı/Yapılmadı",
+        "numeric": "Sayısal"
+    },
+    "frequency": {
+        "title": "Sıklık",
+        "daily": "Her gün",
+        "weekly": "Haftada",
+        "custom": "Özel",
+        "timesPerWeek": "Haftada {{count}} kez",
+        "specificDays": "Belirli günler",
+        "everyXDays": "Her {{count}} günde bir"
+    },
+    "streak": {
+        "title": "Seri",
+        "current": "Mevcut Seri",
+        "longest": "En Uzun Seri",
+        "days": "{{count}} gün"
+    },
+    "progress": {
+        "weekly": "Haftalık İlerleme",
+        "done": "{{done}}/{{target}}"
+    },
+    "sections": {
+        "today": "Bugün",
+        "completed": "Tamamlanan",
+        "archived": "Arşivlenen"
+    },
+    "empty": {
+        "noHabits": "Henüz alışkanlık eklenmedi",
+        "noHabitsDescription": "Günlük rutinlerinizi takip etmek için alışkanlık ekleyin.",
+        "noTodayHabits": "Bugün için alışkanlık yok",
+        "allCompleted": "Tüm alışkanlıklar tamamlandı! 🎉"
+    },
+    "actions": {
+        "markDone": "Tamamlandı olarak işaretle",
+        "markUndone": "İşareti kaldır",
+        "skip": "Atla",
+        "log": "Kaydet"
+    }
+}

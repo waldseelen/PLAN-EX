@@ -115,7 +115,7 @@ export function LectureNotes({ courseId, courseName }: LectureNotesProps) {
         try {
             await deletePDF(id)
             setPdfs(prev => prev.filter(p => p.id !== id))
-        } catch (err) {
+        } catch {
             setError('Silme başarısız')
         }
     }
@@ -124,7 +124,7 @@ export function LectureNotes({ courseId, courseName }: LectureNotesProps) {
     const handleOpen = async (id: string) => {
         try {
             await openPDFInNewTab(id)
-        } catch (err) {
+        } catch {
             setError('Dosya açılamadı')
         }
     }
@@ -133,7 +133,7 @@ export function LectureNotes({ courseId, courseName }: LectureNotesProps) {
     const handleDownload = async (id: string) => {
         try {
             await downloadPDF(id)
-        } catch (err) {
+        } catch {
             setError('İndirme başarısız')
         }
     }
@@ -291,3 +291,4 @@ export function LectureNotes({ courseId, courseName }: LectureNotesProps) {
         </Card>
     )
 }
+

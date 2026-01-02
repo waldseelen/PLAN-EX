@@ -24,6 +24,7 @@ export function useDocumentTitle({
     const originalTitle = useRef(document.title)
 
     useEffect(() => {
+        const initialTitle = originalTitle.current
         if (isRunning && timerSeconds !== undefined) {
             const hours = Math.floor(timerSeconds / 3600)
             const minutes = Math.floor((timerSeconds % 3600) / 60)
@@ -46,7 +47,7 @@ export function useDocumentTitle({
         }
 
         return () => {
-            document.title = originalTitle.current
+            document.title = initialTitle
         }
     }, [timerSeconds, activityName, isRunning, defaultTitle])
 }

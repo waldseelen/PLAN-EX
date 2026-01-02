@@ -1,0 +1,57 @@
+{
+    "title": "Dersler",
+    "subtitle": "Ders ve konuları yönet",
+    "course": {
+        "title": "Ders",
+        "code": "Ders Kodu",
+        "name": "Ders Adı",
+        "color": "Renk",
+        "create": "Yeni Ders",
+        "edit": "Dersi Düzenle",
+        "delete": "Dersi Sil",
+        "deleteConfirm": "Bu dersi silmek istediğinizden emin misiniz? Tüm konular ve görevler de silinecek."
+    },
+    "unit": {
+        "title": "Konu",
+        "name": "Konu Adı",
+        "create": "Yeni Konu",
+        "edit": "Konuyu Düzenle",
+        "delete": "Konuyu Sil",
+        "deleteConfirm": "Bu konuyu silmek istediğinizden emin misiniz?"
+    },
+    "task": {
+        "title": "Görev",
+        "text": "Görev Metni",
+        "create": "Yeni Görev",
+        "edit": "Görevi Düzenle",
+        "delete": "Görevi Sil",
+        "status": {
+            "todo": "Yapılacak",
+            "inProgress": "Devam Ediyor",
+            "review": "İnceleniyor",
+            "done": "Tamamlandı"
+        },
+        "priority": "Öncelikli",
+        "dueDate": "Bitiş Tarihi",
+        "note": "Not",
+        "tags": "Etiketler"
+    },
+    "progress": {
+        "title": "İlerleme",
+        "completed": "{{completed}}/{{total}} tamamlandı",
+        "percent": "%{{percent}}"
+    },
+    "personalTask": {
+        "title": "Kişisel Görevler",
+        "subtitle": "Günlük yapılacaklar listesi",
+        "create": "Yeni Görev Ekle",
+        "emptyTitle": "Henüz görev yok",
+        "emptyDescription": "Kişisel görevlerinizi ekleyerek organize olun."
+    },
+    "stats": {
+        "totalCourses": "Toplam Ders",
+        "totalTasks": "Toplam Görev",
+        "completedTasks": "Tamamlanan",
+        "overallProgress": "Genel İlerleme"
+    }
+}

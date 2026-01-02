@@ -31,14 +31,12 @@ function useDebounce<T>(value: T, delay: number): T {
 interface HeaderProps {
     searchQuery?: string
     onSearchChange?: (query: string) => void
-    onNewTask?: () => void
     onCalendarClick?: () => void
 }
 
 export const Header = memo(function Header({
     searchQuery,
     onSearchChange,
-    onNewTask,
     onCalendarClick,
 }: HeaderProps) {
     const [searchFocused, setSearchFocused] = useState(false)
@@ -212,7 +210,7 @@ export const Header = memo(function Header({
             setShowSearchResults(true)
             setActiveEngine('local')
         }
-    }, [setShowSearchResults])
+    }, [activeEngine, setShowSearchResults])
 
     return (
         <header className="mb-3 md:mb-5 relative z-50">

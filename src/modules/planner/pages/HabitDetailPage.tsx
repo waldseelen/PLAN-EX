@@ -32,7 +32,7 @@ export function HabitDetailPage() {
 
     const habit = habits.find(h => h.id === habitId)
     const habitStats = habit ? getHabitWithStats(habit.id) : null
-    const logs = habit ? getHabitLogs(habit.id) : []
+    const logs = useMemo(() => (habit ? getHabitLogs(habit.id) : []), [habit, getHabitLogs])
 
     const [heatmapMonths] = useState(3);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);

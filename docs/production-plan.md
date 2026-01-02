@@ -1,8 +1,75 @@
 # Plan.Ex (Offline‑First PWA) — Production Plan (MVP → v1 → v2)
 
-> Tarih: 2026-01-01 (güncellendi)
-> Hedef: Tek kod tabanı ile **offline‑first PWA**. v1’de **sunucusuz** (hesap zorunlu değil). Senkron/Drive/Dropbox **opsiyonel modül**.
-> v2: PWA kısıtlarını aşmak için **Capacitor wrapper** ile aynı web UI’ı “native yeteneklerle” genişletme.
+> Tarih: 2026-01-27 (güncellendi)
+> Hedef: Tek kod tabanı ile **offline‑first PWA**. v1'de **sunucusuz** (hesap zorunlu değil). Senkron/Drive/Dropbox **opsiyonel modül**.
+> v2: PWA kısıtlarını aşmak için **Capacitor wrapper** ile aynı web UI'ı "native yeteneklerle" genişletme.
+
+---
+
+## 🆕 Tamamlanan: Dexie Refactor (v2.0)
+
+### Mimari Değişiklikler (2026-01-27)
+
+**Veri Katmanı Dönüşümü:**
+- localStorage (Zustand persist) → Dexie (IndexedDB) migration tamamlandı
+- Yeni `PlannerDatabase` sınıfı: courses, units, tasks, events, personalTasks, habits, habitLogs, completionRecords
+- Compound index stratejisi: `[courseId+order]`, `[type+dateISO]` → O(1) sorgular
+
+**Yeni Dosya Yapısı:**
+```
+src/db/planner/
+├── database.ts          # PlannerDatabase class
+├── types.ts             # DB entity types (DBCourse, DBTask, etc.)
+├── queries/
+│   ├── courseQueries.ts # useLiveQuery hooks
+│   ├── unitQueries.ts
+│   ├── taskQueries.ts
+│   ├── eventQueries.ts
+│   ├── habitQueries.ts
+│   └── statsQueries.ts
+└── migrations/
+    ├── types.ts         # Zod schemas for validation
+    ├── migrationService.ts
+    └── MigrationProvider.tsx
+```
+
+**Store Ayrıştırması:**
+- `plannerStore.ts`: Legacy store (migration tamamlanana kadar korunuyor)
+- `plannerUIStore.ts`: Yalnızca UI state (selections, modals, filters)
+  - localStorage persist: sadece tercihler (sidebarCollapsed, taskFilters)
+  - Session state: undoStack, activeModal
+
+**CalendarPage Decomposition:**
+- `useCalendarGrid.ts`: 42 günlük grid hesaplama (pure)
+- `useCalendarEvents.ts`: Dexie event sorguları
+- `useEventModal.ts`: Modal state management
+
+**i18n Altyapısı:**
+```
+src/i18n/
+├── locales/tr/           # Türkçe (varsayılan)
+│   ├── common.json
+│   ├── planner.json
+│   ├── calendar.json
+│   ├── habits.json
+│   └── settings.json
+├── config.ts             # Lazy loading
+└── I18nProvider.tsx      # useTranslation, useDateFormatter
+```
+
+**Test Coverage:**
+- 236 test geçiyor
+- `tests/planner/calendarGrid.test.ts`: Grid hesaplama
+- `tests/planner/progress.test.ts`: İlerleme hesaplama
+- `tests/planner/streak.test.ts`: Streak/skor hesaplama
+- `tests/planner/eventQueries.test.ts`: Dexie sorguları
+- `tests/planner/migration.test.ts`: Migration servisi
+
+### Sonraki Adımlar
+1. Component entegrasyonu (yeni hook'lar + Dexie queries)
+2. Eski plannerStore kod temizliği
+3. Performance profiling
+4. E2E test güncellemeleri
 
 ---
 
