@@ -123,12 +123,20 @@ export const useAuthStore = create<AuthState>()(
 
           // Create profile
           if (data.user) {
-            await supabase.from('profiles').insert({
+            const profileData = {
               id: data.user.id,
               email: data.user.email!,
               full_name: fullName,
               plan: 'free',
-            })
+            }
+
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert(profileData)
+
+            if (profileError) {
+              console.error('[Auth] Profile creation error:', profileError)
+            }
 
             await get().fetchProfile()
           }
@@ -254,12 +262,14 @@ export const useAuthStore = create<AuthState>()(
         if (!user || !profile) return
 
         try {
+          const updateData = {
+            ...updates,
+            updated_at: new Date().toISOString(),
+          }
+
           const { error } = await supabase
             .from('profiles')
-            .update({
-              ...updates,
-              updated_at: new Date().toISOString(),
-            })
+            .update(updateData)
             .eq('id', user.id)
 
           if (error) throw error
@@ -283,7 +293,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       // Check if user can use a feature
-      canUseFeature: (feature) => {
+      canUseFeature: (_feature) => {
         const { profile } = get()
         if (!profile) return false
 
@@ -314,7 +324,7 @@ export const useAuthStore = create<AuthState>()(
  * Supabase auth state değişikliklerini dinler
  */
 export function initAuthListener() {
-  supabase.auth.onAuthStateChange((event, session) => {
+  supabase.auth.onAuthStateChange((event: string, session: Session | null) => {
     console.log('[Auth] State changed:', event)
 
     const store = useAuthStore.getState()
@@ -338,7 +348,7 @@ export function initAuthListener() {
   })
 
   // Initial session check
-  supabase.auth.getSession().then(({ data: { session } }) => {
+  supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
     if (session) {
       useAuthStore.getState().setUser(session.user)
       useAuthStore.getState().setSession(session)
